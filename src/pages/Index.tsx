@@ -1,37 +1,83 @@
 import { useState } from "react";
-import { Plus, Share2, Wifi, Clock, Book } from "lucide-react";
+import { Plus, Share2, Wifi, Clock, Book, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Listing {
   id: string;
   title: string;
   address: string;
-  wifiPassword: string;
-  checkIn: string;
-  checkOut: string;
-  houseRules: string[];
+  wifi_password: string | null;
+  check_in: string;
+  check_out: string;
+  house_rules: string[] | null;
 }
 
 const Index = () => {
-  const [listings, setListings] = useState<Listing[]>([
-    {
-      id: "1",
-      title: "Cozy Downtown Apartment",
-      address: "123 Main St, City",
-      wifiPassword: "guest123",
-      checkIn: "3:00 PM",
-      checkOut: "11:00 AM",
-      houseRules: ["No smoking", "No parties", "Quiet hours 10 PM - 8 AM"],
+  const queryClient = useQueryClient();
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Fetch listings
+  const { data: listings = [], isLoading } = useQuery({
+    queryKey: ['listings'],
+    queryFn: async () => {
+      console.log('Fetching listings...');
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching listings:', error);
+        throw error;
+      }
+      
+      console.log('Fetched listings:', data);
+      return data as Listing[];
+    }
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      console.log('Deleting listing:', id);
+      const { error } = await supabase
+        .from('listings')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting listing:', error);
+        throw error;
+      }
     },
-  ]);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+      toast.success('Listing deleted successfully');
+    },
+    onError: (error) => {
+      console.error('Delete mutation error:', error);
+      toast.error('Failed to delete listing');
+    }
+  });
 
   const handleShare = (id: string) => {
     const shareUrl = `${window.location.origin}/welcome/${id}`;
     navigator.clipboard.writeText(shareUrl);
     toast.success("Welcome page link copied to clipboard!");
   };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this listing?')) {
+      await deleteMutation.mutate(id);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="text-center">Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -48,13 +94,29 @@ const Index = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 <span className="text-xl">{listing.title}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleShare(listing.id)}
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleShare(listing.id)}
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditingId(listing.id)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(listing.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </CardTitle>
               <p className="text-sm text-muted-foreground">{listing.address}</p>
             </CardHeader>
@@ -62,17 +124,21 @@ const Index = () => {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Wifi className="h-4 w-4 text-primary" />
-                  <span className="text-sm">WiFi Password: {listing.wifiPassword}</span>
+                  <span className="text-sm">
+                    WiFi Password: {listing.wifi_password || 'Not set'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />
                   <span className="text-sm">
-                    Check-in: {listing.checkIn} | Check-out: {listing.checkOut}
+                    Check-in: {listing.check_in} | Check-out: {listing.check_out}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Book className="h-4 w-4 text-primary" />
-                  <span className="text-sm">{listing.houseRules.length} House Rules</span>
+                  <span className="text-sm">
+                    {listing.house_rules?.length || 0} House Rules
+                  </span>
                 </div>
               </div>
             </CardContent>
