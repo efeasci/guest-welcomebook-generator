@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { EditListingDialog } from "@/components/EditListingDialog";
 
 interface Listing {
   id: string;
@@ -18,7 +19,7 @@ interface Listing {
 
 const Index = () => {
   const queryClient = useQueryClient();
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
 
   // Fetch listings
   const { data: listings = [], isLoading } = useQuery({
@@ -105,7 +106,7 @@ const Index = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setEditingId(listing.id)}
+                    onClick={() => setEditingListing(listing)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -145,6 +146,14 @@ const Index = () => {
           </Card>
         ))}
       </div>
+
+      {editingListing && (
+        <EditListingDialog
+          listing={editingListing}
+          open={!!editingListing}
+          onOpenChange={(open) => !open && setEditingListing(null)}
+        />
+      )}
     </div>
   );
 };
