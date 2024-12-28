@@ -62,11 +62,18 @@ export function AddListingDialog({
       if (userError) throw userError
       if (!user) throw new Error("No user found")
 
-      const { error } = await supabase.from("listings").insert({
-        ...values,
-        user_id: user.id,
+      // Prepare the data object with all required fields
+      const listingData = {
+        title: values.title,
+        address: values.address,
+        wifi_password: values.wifi_password || null,
+        check_in: values.check_in,
+        check_out: values.check_out,
         house_rules: values.house_rules ? values.house_rules.split('\n').filter(rule => rule.trim()) : [],
-      })
+        user_id: user.id,
+      }
+
+      const { error } = await supabase.from("listings").insert(listingData)
 
       if (error) throw error
 
