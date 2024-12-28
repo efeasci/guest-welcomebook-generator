@@ -23,14 +23,19 @@ export default function Login() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth event:", event);
       
-      if (event === "USER_DELETED") {
+      if (event === "SIGNED_OUT") {
         toast({
-          title: "Account deleted",
-          description: "Your account has been successfully deleted",
+          title: "Signed out",
+          description: "You have been signed out successfully",
         });
       } else if (event === "SIGNED_IN") {
         console.log("User signed in successfully");
         navigate("/");
+      } else if (event === "USER_UPDATED") {
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully",
+        });
       }
     });
 
@@ -58,14 +63,6 @@ export default function Login() {
           }}
           providers={[]}
           redirectTo={window.location.origin}
-          onError={(error) => {
-            console.error("Auth error:", error);
-            toast({
-              title: "Authentication Error",
-              description: error.message,
-              variant: "destructive",
-            });
-          }}
         />
       </div>
     </div>
