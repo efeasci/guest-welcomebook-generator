@@ -84,7 +84,7 @@ export default function Index() {
       if (error) throw error;
 
       setListings(listings.filter(listing => listing.id !== listingId));
-      toast.success("Listing deleted successfully");
+      toast("Listing deleted successfully");
     } catch (error) {
       console.error("Error deleting listing:", error);
       toast.error("Failed to delete listing");
@@ -117,10 +117,7 @@ export default function Index() {
           open={!!editingListing}
           onOpenChange={(open) => !open && setEditingListing(null)}
           onSuccess={() => {
-            toast({
-              title: "Success",
-              description: "Listing updated successfully",
-            });
+            toast("Listing updated successfully");
           }}
         />
       )}
