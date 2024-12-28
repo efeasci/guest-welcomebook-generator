@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EditListingDialog } from "@/components/EditListingDialog";
+import { AddListingDialog } from "@/components/AddListingDialog";
 
 interface Listing {
   id: string;
@@ -20,6 +21,7 @@ interface Listing {
 const Index = () => {
   const queryClient = useQueryClient();
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // Fetch listings
   const { data: listings = [], isLoading } = useQuery({
@@ -84,7 +86,10 @@ const Index = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold text-gray-900">My Listings</h1>
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button 
+          className="bg-primary hover:bg-primary/90"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
           <Plus className="mr-2 h-4 w-4" /> Add New Listing
         </Button>
       </div>
@@ -154,6 +159,11 @@ const Index = () => {
           onOpenChange={(open) => !open && setEditingListing(null)}
         />
       )}
+
+      <AddListingDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+      />
     </div>
   );
 };
