@@ -16,6 +16,7 @@ export default function Index() {
   const [listings, setListings] = useState<Tables<"listings">[]>([]);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingListing, setEditingListing] = useState<Tables<"listings"> | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -91,6 +92,20 @@ export default function Index() {
         onOpenChange={setIsAddDialogOpen}
       />
 
+      {editingListing && (
+        <EditListingDialog 
+          listing={editingListing}
+          open={!!editingListing}
+          onOpenChange={(open) => !open && setEditingListing(null)}
+          onSuccess={() => {
+            toast({
+              title: "Success",
+              description: "Listing updated successfully",
+            });
+          }}
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {listings.map((listing) => (
           <Card key={listing.id} className="p-6">
@@ -101,15 +116,12 @@ export default function Index() {
                 <p className="text-sm">Check-in: {listing.check_in}</p>
                 <p className="text-sm">Check-out: {listing.check_out}</p>
               </div>
-              <EditListingDialog
-                listing={listing}
-                onSuccess={() => {
-                  toast({
-                    title: "Success",
-                    description: "Listing updated successfully",
-                  });
-                }}
-              />
+              <Button 
+                variant="outline"
+                onClick={() => setEditingListing(listing)}
+              >
+                Edit
+              </Button>
             </div>
           </Card>
         ))}
