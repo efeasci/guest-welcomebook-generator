@@ -8,11 +8,13 @@ import AddListingDialog from "@/components/AddListingDialog";
 import EditListingDialog from "@/components/EditListingDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Card } from "@/components/ui/card";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const [listings, setListings] = useState<Tables<"listings">[]>([]);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -29,7 +31,7 @@ export default function Index() {
 
         if (error) {
           console.error("Error fetching listings:", error);
-          toast({
+          uiToast({
             title: "Error",
             description: "Failed to fetch listings",
             variant: "destructive",
@@ -57,18 +59,35 @@ export default function Index() {
       fetchListings();
       fetchProfile();
     }
-  }, [user, toast]);
+  }, [user, uiToast]);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      toast({
+      uiToast({
         title: "Error",
         description: "Failed to sign out",
         variant: "destructive",
       });
     } else {
       navigate("/login");
+    }
+  };
+
+  const handleDelete = async (listingId: string) => {
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", listingId);
+
+      if (error) throw error;
+
+      setListings(listings.filter(listing => listing.id !== listingId));
+      toast.success("Listing deleted successfully");
+    } catch (error) {
+      console.error("Error deleting listing:", error);
+      toast.error("Failed to delete listing");
     }
   };
 
@@ -116,12 +135,21 @@ export default function Index() {
                 <p className="text-sm">Check-in: {listing.check_in}</p>
                 <p className="text-sm">Check-out: {listing.check_out}</p>
               </div>
-              <Button 
-                variant="outline"
-                onClick={() => setEditingListing(listing)}
-              >
-                Edit
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setEditingListing(listing)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => handleDelete(listing.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </Card>
         ))}
