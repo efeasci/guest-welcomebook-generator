@@ -31,13 +31,13 @@ const formSchema = z.object({
   house_rules: z.string().optional(),
 })
 
-export function AddListingDialog({
+const AddListingDialog = ({
   open,
   onOpenChange,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-}) {
+}) => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -191,3 +191,5 @@ export function AddListingDialog({
     </Dialog>
   )
 }
+
+export default AddListingDialog

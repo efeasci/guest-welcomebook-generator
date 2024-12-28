@@ -15,6 +15,7 @@ export default function Index() {
   const { toast } = useToast();
   const [listings, setListings] = useState<Tables<"listings">[]>([]);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -78,17 +79,17 @@ export default function Index() {
           <p className="text-gray-600">{user?.email}</p>
         </div>
         <div className="flex gap-4">
-          <AddListingDialog onSuccess={() => {
-            toast({
-              title: "Success",
-              description: "Listing added successfully",
-            });
-          }} />
+          <Button onClick={() => setIsAddDialogOpen(true)}>Add Listing</Button>
           <Button variant="outline" onClick={handleSignOut}>
             Sign Out
           </Button>
         </div>
       </div>
+
+      <AddListingDialog 
+        open={isAddDialogOpen} 
+        onOpenChange={setIsAddDialogOpen}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {listings.map((listing) => (
