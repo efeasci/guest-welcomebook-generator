@@ -27,7 +27,7 @@ interface EditListingDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditListingDialog({ listing, open, onOpenChange }: EditListingDialogProps) {
+const EditListingDialog = ({ listing, open, onOpenChange }: EditListingDialogProps) => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     title: listing.title,
@@ -144,4 +144,6 @@ export function EditListingDialog({ listing, open, onOpenChange }: EditListingDi
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default EditListingDialog;
