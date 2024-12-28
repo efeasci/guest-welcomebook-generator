@@ -25,9 +25,10 @@ interface EditListingDialogProps {
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-const EditListingDialog = ({ listing, open, onOpenChange }: EditListingDialogProps) => {
+const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListingDialogProps) => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     title: listing.title,
@@ -56,6 +57,7 @@ const EditListingDialog = ({ listing, open, onOpenChange }: EditListingDialogPro
 
       toast.success("Listing updated successfully");
       queryClient.invalidateQueries({ queryKey: ["listings"] });
+      onSuccess?.();
       onOpenChange(false);
     } catch (error) {
       console.error("Error updating listing:", error);
