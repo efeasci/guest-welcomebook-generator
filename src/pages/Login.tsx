@@ -4,17 +4,40 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/App";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Login() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     // If user is already logged in, redirect to home page
     if (user) {
       navigate("/");
     }
-  }, [user, navigate]);
+
+    // Listen for auth errors
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth event:", event);
+      
+      if (event === "USER_DELETED") {
+        toast({
+          title: "Account deleted",
+          description: "Your account has been successfully deleted",
+        });
+      } else if (event === "SIGNED_IN") {
+        console.log("User signed in successfully");
+        navigate("/");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user, navigate, toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -22,9 +45,27 @@ export default function Login() {
         <h1 className="text-2xl font-bold text-center mb-6">Welcome</h1>
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
+          appearance={{ 
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#000000',
+                  brandAccent: '#666666',
+                }
+              }
+            }
+          }}
           providers={[]}
           redirectTo={window.location.origin}
+          onError={(error) => {
+            console.error("Auth error:", error);
+            toast({
+              title: "Authentication Error",
+              description: error.message,
+              variant: "destructive",
+            });
+          }}
         />
       </div>
     </div>
