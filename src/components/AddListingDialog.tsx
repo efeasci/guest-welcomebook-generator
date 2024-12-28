@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
@@ -55,9 +56,16 @@ export function AddListingDialog({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       console.log("Submitting new listing:", values)
+      
+      // Get the current user's ID
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError) throw userError
+      if (!user) throw new Error("No user found")
+
       const { error } = await supabase.from("listings").insert({
         ...values,
-        house_rules: values.house_rules ? values.house_rules.split('\n') : [],
+        user_id: user.id,
+        house_rules: values.house_rules ? values.house_rules.split('\n').filter(rule => rule.trim()) : [],
       })
 
       if (error) throw error
@@ -160,8 +168,7 @@ export function AddListingDialog({
                 <FormItem>
                   <FormLabel>House Rules (Optional, one per line)</FormLabel>
                   <FormControl>
-                    <Input
-                      as="textarea"
+                    <Textarea
                       placeholder="Enter house rules, one per line"
                       {...field}
                     />
