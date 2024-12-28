@@ -21,6 +21,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { supabase } from "@/integrations/supabase/client"
+import { useNavigate } from "react-router-dom"
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -40,6 +41,7 @@ const AddListingDialog = ({
 }) => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -73,7 +75,7 @@ const AddListingDialog = ({
         user_id: user.id,
       }
 
-      const { error } = await supabase.from("listings").insert(listingData)
+      const { data, error } = await supabase.from("listings").insert(listingData).select().single()
 
       if (error) throw error
 
@@ -85,6 +87,11 @@ const AddListingDialog = ({
       queryClient.invalidateQueries({ queryKey: ["listings"] })
       onOpenChange(false)
       form.reset()
+      
+      // Navigate to the welcome page with the new listing ID
+      if (data) {
+        navigate(`/welcome/${data.id}`)
+      }
     } catch (error) {
       console.error("Error creating listing:", error)
       toast({
