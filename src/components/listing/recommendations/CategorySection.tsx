@@ -45,10 +45,14 @@ const CategorySection = ({
 
       console.log('Generated recommendations response:', data);
       
-      // Trigger the parent component to refresh recommendations
-      onRecommendationAdded?.();
-      
-      toast.success(`Generated recommendations for ${category}`);
+      if (data.recommendations?.length > 0) {
+        console.log('New recommendations generated:', data.recommendations.length);
+        // Trigger the parent component to refresh recommendations
+        onRecommendationAdded?.();
+        toast.success(`Generated ${data.recommendations.length} recommendations for ${category}`);
+      } else {
+        toast.error(`No recommendations found for ${category}`);
+      }
     } catch (error) {
       console.error('Error generating recommendations:', error);
       toast.error(`Failed to generate recommendations for ${category}`);

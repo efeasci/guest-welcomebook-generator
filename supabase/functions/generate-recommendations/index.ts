@@ -56,12 +56,12 @@ const getCategoryConfig = (category: string) => {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { address, category, listingId } = await req.json()
-    console.log('Received request with address:', address, 'category:', category)
+    console.log('Generating recommendations for:', { address, category, listingId });
     
     const config = getCategoryConfig(category);
     
@@ -76,6 +76,7 @@ serve(async (req) => {
     }
     
     const { lat, lng } = geocodeData.results[0].geometry.location;
+    console.log('Geocoded location:', { lat, lng });
     
     // Search for places using the Places API
     const placesResponse = await fetch(
@@ -92,6 +93,8 @@ serve(async (req) => {
       .filter((place: any) => place.rating >= config.minRating)
       .sort((a: any, b: any) => b.rating - a.rating)
       .slice(0, 5);
+    
+    console.log('Found top places:', topPlaces.length);
     
     // Get more details for each place
     const detailedPlaces = await Promise.all(
@@ -136,8 +139,10 @@ serve(async (req) => {
         : null
     }));
     
+    console.log('Saving recommendations:', recommendations.length);
+    
     // Insert recommendations into database
-    const { error: insertError } = await fetch(
+    const response = await fetch(
       `${Deno.env.get('SUPABASE_URL')}/rest/v1/listing_recommendations`,
       {
         method: 'POST',
@@ -145,18 +150,24 @@ serve(async (req) => {
           'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
           'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'Prefer': 'return=representation'
         },
         body: JSON.stringify(recommendations)
       }
-    ).then(r => r.json());
+    );
 
-    if (insertError) {
+    if (!response.ok) {
       throw new Error('Failed to save recommendations');
     }
 
+    const savedRecommendations = await response.json();
+    console.log('Successfully saved recommendations:', savedRecommendations.length);
+
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true,
+        recommendations: savedRecommendations 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
