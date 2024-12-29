@@ -47,21 +47,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         fields: ['name', 'formatted_address', 'place_id', 'geometry', 'photos']
       });
 
-      // Add click event listener to the container
-      const container = searchInputRef.current.parentElement;
-      if (container) {
-        container.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement;
-          if (target.classList.contains('pac-item')) {
-            e.preventDefault();
-            const placeName = target.textContent;
-            if (placeName) {
-              onChange(placeName);
-            }
-          }
-        });
-      }
-
+      // Handle place selection
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         console.log('Selected place:', place);
@@ -71,7 +57,6 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
           return;
         }
 
-        // Update the input value with the selected place name
         if (place.name) {
           onChange(place.name);
         }
@@ -79,13 +64,41 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         onPlaceSelect(place);
       });
 
-      // Enable clicking on suggestions
-      const pacContainer = document.querySelector('.pac-container');
-      if (pacContainer) {
-        pacContainer.addEventListener('mousedown', (e) => {
-          e.preventDefault();
+      // Make suggestions clickable
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.addedNodes.length) {
+            const pacContainer = document.querySelector('.pac-container');
+            if (pacContainer && !pacContainer.getAttribute('data-click-handler')) {
+              pacContainer.setAttribute('data-click-handler', 'true');
+              
+              pacContainer.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Prevent input blur
+              });
+
+              pacContainer.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+                const pacItem = target.closest('.pac-item');
+                if (pacItem) {
+                  // Simulate pressing enter on the selected item
+                  const input = searchInputRef.current;
+                  if (input) {
+                    const parts = pacItem.textContent?.split('') || [];
+                    input.value = parts.join('');
+                    google.maps.event.trigger(autocomplete, 'place_changed');
+                  }
+                }
+              });
+            }
+          }
         });
-      }
+      });
+
+      // Observe DOM changes to catch when Google adds the pac-container
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
 
       setAutocomplete(autocomplete);
     };
