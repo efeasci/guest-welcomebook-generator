@@ -26,13 +26,13 @@ const AddRecommendationDialog = ({
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
 
   const handleAddRecommendation = async () => {
-    if (!selectedPlace) {
-      toast.error('Please select a place from the suggestions');
+    if (!selectedPlace || !selectedPlace.geometry?.location) {
+      toast.error('Please select a valid place from the suggestions');
       return;
     }
 
     try {
-      const location = selectedPlace.geometry?.location;
+      const location = selectedPlace.geometry.location;
       const newRecommendation = {
         listing_id: listingId,
         name: selectedPlace.name || '',
@@ -40,8 +40,8 @@ const AddRecommendationDialog = ({
         address: selectedPlace.formatted_address || '',
         photo: selectedPlace.photos?.[0]?.getUrl(),
         location: {
-          lat: location?.lat(),
-          lng: location?.lng()
+          lat: location.lat(),
+          lng: location.lng()
         },
         category: category
       };

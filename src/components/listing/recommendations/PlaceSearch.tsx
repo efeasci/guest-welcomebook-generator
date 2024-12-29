@@ -51,10 +51,12 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         const place = autocomplete.getPlace();
         console.log('Selected place:', place);
         
-        if (place.name) {
-          onChange(place.name);
-          onPlaceSelect(place);
+        if (!place.geometry) {
+          console.log('No geometry for selected place');
+          return;
         }
+
+        onPlaceSelect(place);
       });
 
       setAutocomplete(autocomplete);
@@ -67,13 +69,14 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         google.maps.event.clearInstanceListeners(autocomplete);
       }
     };
-  }, [onPlaceSelect, onChange]);
+  }, [onPlaceSelect]);
 
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Search Place</label>
       <Input
         ref={searchInputRef}
+        type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search for a place..."
