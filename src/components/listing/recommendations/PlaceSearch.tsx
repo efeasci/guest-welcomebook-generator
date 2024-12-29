@@ -12,7 +12,6 @@ interface PlaceSearchProps {
 const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
   const [autocompleteService, setAutocompleteService] = useState<google.maps.places.AutocompleteService | null>(null);
   const [placesService, setPlacesService] = useState<google.maps.places.PlacesService | null>(null);
-  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
 
   useEffect(() => {
     const initGoogleMaps = async () => {
@@ -82,7 +81,6 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0]) {
             const place = results[0];
             console.log('Place details retrieved:', place);
-            setSelectedPlace(place);
             onPlaceSelect(place);
           }
         });
@@ -99,7 +97,6 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     console.log('Place selected:', place);
-    setSelectedPlace(place);
     onPlaceSelect(place);
     if (place.formatted_address) {
       onChange(place.formatted_address);
@@ -111,13 +108,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
   return (
     <PlaceSearchInput
       value={value}
-      onChange={(newValue) => {
-        onChange(newValue);
-        // Only clear selected place if user is typing something different
-        if (newValue !== selectedPlace?.formatted_address && newValue !== selectedPlace?.name) {
-          setSelectedPlace(null);
-        }
-      }}
+      onChange={onChange}
       onPlaceSelect={handlePlaceSelect}
     />
   );
