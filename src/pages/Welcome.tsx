@@ -1,5 +1,17 @@
 import { useParams } from "react-router-dom";
-import { Wifi, Clock, MapPin, Book, DoorClosed, Navigation2, Info } from "lucide-react";
+import { 
+  Wifi, 
+  Clock, 
+  MapPin, 
+  Book, 
+  DoorClosed, 
+  Navigation2, 
+  Info,
+  Mail,
+  Phone,
+  User,
+  Key
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -31,7 +43,6 @@ const Welcome = () => {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Listing not found</div>;
   }
 
-  // Get a random placeholder image
   const placeholders = [
     'photo-1649972904349-6e44c42644a7',
     'photo-1488590528505-98d2b5aba04b',
@@ -57,6 +68,7 @@ const Welcome = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto shadow-xl overflow-hidden">
+          {/* Image and Title Section */}
           <div className="w-full h-48 relative">
             <img 
               src={listing.image_url || `https://source.unsplash.com/${randomPlaceholder}`}
@@ -78,8 +90,9 @@ const Welcome = () => {
             </a>
           </CardHeader>
 
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
+          <CardContent className="space-y-8">
+            {/* Location Section */}
+            <section className="space-y-4">
               <div className="h-64 w-full">
                 <Map address={listing.address} className="h-full" />
               </div>
@@ -100,8 +113,79 @@ const Welcome = () => {
                   </a>
                 </Button>
               </div>
-            </div>
+            </section>
 
+            {/* Host Information Section */}
+            {(listing.host_name || listing.host_about || listing.host_email || listing.host_phone) && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" /> Your Host
+                </h2>
+                <div className="bg-secondary/50 p-4 rounded-lg space-y-4">
+                  {listing.host_name && (
+                    <div>
+                      <p className="font-semibold">Name</p>
+                      <p>{listing.host_name}</p>
+                    </div>
+                  )}
+                  {listing.host_about && (
+                    <div>
+                      <p className="font-semibold">About</p>
+                      <p>{listing.host_about}</p>
+                    </div>
+                  )}
+                  {listing.host_email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      <a href={`mailto:${listing.host_email}`} className="text-primary hover:underline">
+                        {listing.host_email}
+                      </a>
+                    </div>
+                  )}
+                  {listing.host_phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      <a href={`tel:${listing.host_phone}`} className="text-primary hover:underline">
+                        {listing.host_phone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Check-in Information Section */}
+            <section className="space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Key className="h-5 w-5 text-primary" /> Check-in Information
+              </h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-secondary p-4 rounded-lg">
+                    <p className="font-semibold">Check-in</p>
+                    <p>{listing.check_in}</p>
+                  </div>
+                  <div className="bg-secondary p-4 rounded-lg">
+                    <p className="font-semibold">Check-out</p>
+                    <p>{listing.check_out}</p>
+                  </div>
+                </div>
+                {listing.check_in_method && (
+                  <div className="bg-secondary/50 p-4 rounded-lg">
+                    <p className="font-semibold">Check-in Method</p>
+                    <p>{listing.check_in_method}</p>
+                  </div>
+                )}
+                {listing.check_in_instructions && (
+                  <div className="bg-secondary/50 p-4 rounded-lg">
+                    <p className="font-semibold">Check-in Instructions</p>
+                    <p className="whitespace-pre-wrap">{listing.check_in_instructions}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Directions Section */}
             {listing.directions && (
               <section className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -113,40 +197,30 @@ const Welcome = () => {
               </section>
             )}
 
-            {listing.wifi_password && (
+            {/* WiFi Information Section */}
+            {(listing.wifi_network || listing.wifi_password) && (
               <section className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                   <Wifi className="h-5 w-5 text-primary" /> WiFi Information
                 </h2>
                 <div className="bg-secondary p-4 rounded-lg space-y-2">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Network Name</p>
-                    <p className="font-mono text-lg">{listing.wifi_network || "WiFi"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Password</p>
-                    <p className="font-mono text-lg">{listing.wifi_password}</p>
-                  </div>
+                  {listing.wifi_network && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Network Name</p>
+                      <p className="font-mono text-lg">{listing.wifi_network}</p>
+                    </div>
+                  )}
+                  {listing.wifi_password && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Password</p>
+                      <p className="font-mono text-lg">{listing.wifi_password}</p>
+                    </div>
+                  )}
                 </div>
               </section>
             )}
 
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" /> Check-in/out Times
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-secondary p-4 rounded-lg">
-                  <p className="font-semibold">Check-in</p>
-                  <p>{listing.check_in}</p>
-                </div>
-                <div className="bg-secondary p-4 rounded-lg">
-                  <p className="font-semibold">Check-out</p>
-                  <p>{listing.check_out}</p>
-                </div>
-              </div>
-            </section>
-
+            {/* House Rules Section */}
             {listing.house_rules && listing.house_rules.length > 0 && (
               <section className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -160,6 +234,7 @@ const Welcome = () => {
               </section>
             )}
 
+            {/* Before You Leave Section */}
             {listing.before_you_leave && listing.before_you_leave.length > 0 && (
               <section className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
