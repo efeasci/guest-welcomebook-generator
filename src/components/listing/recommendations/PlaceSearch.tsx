@@ -47,6 +47,21 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         fields: ['name', 'formatted_address', 'place_id', 'geometry', 'photos']
       });
 
+      // Add click event listener to the container
+      const container = searchInputRef.current.parentElement;
+      if (container) {
+        container.addEventListener('click', (e) => {
+          const target = e.target as HTMLElement;
+          if (target.classList.contains('pac-item')) {
+            e.preventDefault();
+            const placeName = target.textContent;
+            if (placeName) {
+              onChange(placeName);
+            }
+          }
+        });
+      }
+
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         console.log('Selected place:', place);
@@ -56,8 +71,21 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
           return;
         }
 
+        // Update the input value with the selected place name
+        if (place.name) {
+          onChange(place.name);
+        }
+        
         onPlaceSelect(place);
       });
+
+      // Enable clicking on suggestions
+      const pacContainer = document.querySelector('.pac-container');
+      if (pacContainer) {
+        pacContainer.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+        });
+      }
 
       setAutocomplete(autocomplete);
     };
@@ -69,7 +97,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         google.maps.event.clearInstanceListeners(autocomplete);
       }
     };
-  }, [onPlaceSelect]);
+  }, [onPlaceSelect, onChange]);
 
   return (
     <div className="space-y-2">
