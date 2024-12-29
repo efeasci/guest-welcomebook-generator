@@ -30,10 +30,19 @@ const CategorySection = ({
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    console.log('Selected place:', place);
+    console.log('Selected place in CategorySection:', place);
     setSelectedPlace(place);
     if (place.name) {
       setSearchInput(place.name);
+    }
+  };
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value);
+    // Only clear selected place if user manually changes the input to something different
+    if (selectedPlace && value !== selectedPlace.name && value !== selectedPlace.formatted_address) {
+      console.log('Clearing selected place because input changed');
+      setSelectedPlace(null);
     }
   };
 
@@ -116,7 +125,7 @@ const CategorySection = ({
             <div className="space-y-4 border rounded-lg p-4">
               <PlaceSearch
                 value={searchInput}
-                onChange={setSearchInput}
+                onChange={handleSearchInputChange}
                 onPlaceSelect={handlePlaceSelect}
               />
               {selectedPlace && (
