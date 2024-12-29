@@ -16,11 +16,15 @@ serve(async (req) => {
     console.log('Received request to fetch Airbnb data for URL:', airbnbUrl)
 
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY')
+    console.log('API Key present:', !!apiKey) // Log if API key exists without exposing it
+
     if (!apiKey) {
+      console.error('FIRECRAWL_API_KEY not found in environment variables')
       throw new Error('FIRECRAWL_API_KEY not configured')
     }
 
     // Make request to Firecrawl API using fetch
+    console.log('Making request to Firecrawl API...')
     const response = await fetch('https://api.firecrawl.co/crawl', {
       method: 'POST',
       headers: {
@@ -37,11 +41,13 @@ serve(async (req) => {
     })
 
     if (!response.ok) {
-      throw new Error(`Firecrawl API error: ${response.statusText}`)
+      const errorText = await response.text()
+      console.error('Firecrawl API error:', response.status, errorText)
+      throw new Error(`Firecrawl API error: ${response.status} - ${errorText}`)
     }
 
     const crawlResponse = await response.json()
-    console.log('Crawl response:', crawlResponse)
+    console.log('Crawl response received:', !!crawlResponse) // Log success without exposing full response
 
     const content = crawlResponse.data[0]?.content || ''
     
