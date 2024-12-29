@@ -22,6 +22,7 @@ export default function EditListing() {
       if (error) throw error;
       return data;
     },
+    enabled: !!id, // Only run query if we have an ID
   });
 
   if (isLoading) {
