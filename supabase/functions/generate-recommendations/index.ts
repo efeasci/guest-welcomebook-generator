@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2'
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,7 +33,6 @@ serve(async (req) => {
 
     let recommendations = []
     try {
-      // Extract JSON from the response
       const jsonStr = response.generated_text.match(/\[.*\]/s)?.[0]
       if (jsonStr) {
         recommendations = JSON.parse(jsonStr)
@@ -43,7 +43,29 @@ serve(async (req) => {
       throw new Error('Failed to parse recommendations')
     }
 
-    // Get place details and photos using Google Places API
+    // Get existing recommendations to avoid duplicates
+    const { data: existingRecs, error: fetchError } = await fetch(
+      `${Deno.env.get('SUPABASE_URL')}/rest/v1/listing_recommendations?select=name`,
+      {
+        headers: {
+          'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        },
+      }
+    ).then(r => r.json())
+
+    if (fetchError) {
+      console.error('Error fetching existing recommendations:', fetchError)
+    }
+
+    const existingNames = new Set(existingRecs?.map((r: any) => r.name.toLowerCase()))
+
+    // Filter out duplicates
+    recommendations = recommendations.filter((rec: any) => 
+      !existingNames.has(rec.name.toLowerCase())
+    )
+
+    // Enrich with Google Places data
     const enrichedRecommendations = await Promise.all(
       recommendations.slice(0, 5).map(async (rec: any) => {
         console.log('Enriching recommendation:', rec.name)
@@ -58,40 +80,36 @@ serve(async (req) => {
           
           if (placeData.results && placeData.results[0]) {
             const place = placeData.results[0]
-            return {
-              ...rec,
-              // Ensure address is never null by falling back to the listing address
-              address: place.formatted_address || address,
-              location: place.geometry.location || { lat: 0, lng: 0 },
-              photo: place.photos?.[0]?.photo_reference 
-                ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
-                : null
+            console.log('Found place:', place.name, 'at address:', place.formatted_address)
+            
+            // Only use the recommendation if we found a valid place
+            if (place.formatted_address && place.geometry?.location) {
+              return {
+                ...rec,
+                address: place.formatted_address,
+                location: place.geometry.location,
+                photo: place.photos?.[0]?.photo_reference 
+                  ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+                  : null
+              }
             }
           }
-          // If no place found, use fallback values
-          return {
-            ...rec,
-            address: address, // Fallback to the listing address
-            location: { lat: 0, lng: 0 },
-            photo: null
-          }
+          // Skip this recommendation if we couldn't find a valid place
+          return null
         } catch (error) {
           console.error('Error enriching recommendation:', error)
-          // Return fallback values on error
-          return {
-            ...rec,
-            address: address, // Fallback to the listing address
-            location: { lat: 0, lng: 0 },
-            photo: null
-          }
+          return null
         }
       })
     )
 
-    console.log('Returning enriched recommendations:', enrichedRecommendations)
+    // Filter out null results and take only valid recommendations
+    const validRecommendations = enrichedRecommendations.filter(rec => rec !== null)
+
+    console.log('Returning enriched recommendations:', validRecommendations)
 
     return new Response(
-      JSON.stringify({ recommendations: enrichedRecommendations }),
+      JSON.stringify({ recommendations: validRecommendations }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {

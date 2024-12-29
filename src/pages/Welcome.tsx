@@ -94,7 +94,7 @@ const Welcome = () => {
 
             <LeaveSection instructions={listing.before_you_leave} />
 
-            <RecommendationsSection address={listing.address} />
+            <RecommendationsSection listingId={listing.id} />
 
             <HostSection
               name={listing.host_name}

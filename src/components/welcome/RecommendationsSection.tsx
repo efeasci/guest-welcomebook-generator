@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Accordion } from "@/components/ui/accordion";
 import CategorySection from "./recommendations/CategorySection";
 import type { Recommendation } from "./recommendations/types";
+import { useQuery } from "@tanstack/react-query";
 
 const categories = [
   "Places to Eat",
@@ -15,53 +16,47 @@ const categories = [
 ];
 
 interface RecommendationsSectionProps {
-  address: string;
+  listingId: string;
 }
 
-const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
-  const [recommendations, setRecommendations] = useState<Record<string, Recommendation[]>>({});
-  const [loading, setLoading] = useState<Record<string, boolean>>({});
-  const [error, setError] = useState<string | null>(null);
+const RecommendationsSection = ({ listingId }: RecommendationsSectionProps) => {
   const [hasAnyRecommendations, setHasAnyRecommendations] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchRecommendations = async (category: string) => {
-    if (recommendations[category]?.length > 0) return;
-    
-    setLoading(prev => ({ ...prev, [category]: true }));
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-recommendations', {
-        body: { address, category }
-      });
+  const { data: recommendations, isLoading } = useQuery({
+    queryKey: ['recommendations', listingId],
+    queryFn: async () => {
+      console.log('Fetching recommendations for listing:', listingId);
+      const { data, error } = await supabase
+        .from('listing_recommendations')
+        .select('*')
+        .eq('listing_id', listingId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching recommendations:', error);
+        throw error;
+      }
 
-      setRecommendations(prev => {
-        const newRecs = {
-          ...prev,
-          [category]: data.recommendations
-        };
-        
-        const hasRecs = Object.values(newRecs).some(recs => recs && recs.length > 0);
-        setHasAnyRecommendations(hasRecs);
-        
-        return newRecs;
-      });
-    } catch (err) {
-      console.error('Error fetching recommendations:', err);
-      setError('Failed to load recommendations. Please try again later.');
-    } finally {
-      setLoading(prev => ({ ...prev, [category]: false }));
-    }
-  };
+      console.log('Fetched recommendations:', data);
+      return data as Recommendation[];
+    },
+  });
 
   useEffect(() => {
-    const hasRecs = Object.values(recommendations).some(recs => recs && recs.length > 0);
-    setHasAnyRecommendations(hasRecs);
-  }, []);
+    if (recommendations) {
+      const hasRecs = recommendations.length > 0;
+      console.log('Setting hasAnyRecommendations:', hasRecs);
+      setHasAnyRecommendations(hasRecs);
+    }
+  }, [recommendations]);
 
-  if (!hasAnyRecommendations && !Object.values(loading).some(isLoading => isLoading)) {
+  if (!hasAnyRecommendations && !isLoading) {
     return null;
   }
+
+  const getRecommendationsByCategory = (category: string) => {
+    return recommendations?.filter(rec => rec.category === category) || [];
+  };
 
   return (
     <section className="space-y-4">
@@ -73,9 +68,8 @@ const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
           <CategorySection
             key={category}
             category={category}
-            recommendations={recommendations[category] || []}
-            loading={loading[category] || false}
-            onFetch={fetchRecommendations}
+            recommendations={getRecommendationsByCategory(category)}
+            loading={false}
           />
         ))}
       </Accordion>
