@@ -13,9 +13,6 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
-    let clickHandler: ((e: MouseEvent) => void) | null = null;
-    let mouseDownHandler: ((e: MouseEvent) => void) | null = null;
-
     const initAutocomplete = async () => {
       try {
         const { data: { api_key }, error } = await supabase.functions.invoke('get-google-maps-key');
@@ -57,20 +54,21 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         const place = autocomplete.getPlace();
         console.log('Selected place:', place);
         
-        if (!place.geometry) {
-          console.log('No geometry for selected place');
+        // Check if place exists and has required properties before proceeding
+        if (!place || !place.geometry) {
+          console.log('No valid place selected');
           return;
         }
 
+        // Only update if we have a valid place with a name
         if (place.name) {
           onChange(place.name);
+          onPlaceSelect(place);
         }
-        
-        onPlaceSelect(place);
       });
 
-      // Handle suggestion clicks in dialog context
-      clickHandler = (e: MouseEvent) => {
+      // Handle clicks on autocomplete suggestions
+      const clickHandler = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         const pacItem = target.closest('.pac-item');
         
@@ -78,54 +76,54 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
           e.preventDefault();
           e.stopPropagation();
           
-          console.log('Suggestion clicked in dialog:', pacItem);
-          
           const mainText = pacItem.querySelector('.pac-item-query')?.textContent || '';
           const secondaryText = pacItem.textContent?.replace(mainText, '').trim() || '';
           const fullText = `${mainText} ${secondaryText}`.trim();
           
-          console.log('Selected text in dialog:', fullText);
-
           if (searchInputRef.current) {
             searchInputRef.current.value = fullText;
             onChange(fullText);
 
-            requestAnimationFrame(() => {
-              google.maps.event.trigger(autocomplete, 'place_changed');
-            });
+            // Trigger place_changed event after a short delay
+            setTimeout(() => {
+              if (autocomplete) {
+                google.maps.event.trigger(autocomplete, 'place_changed');
+              }
+            }, 100);
           }
         }
       };
 
       // Prevent focus loss in dialog
-      mouseDownHandler = (e: MouseEvent) => {
+      const mouseDownHandler = (e: MouseEvent) => {
         if ((e.target as HTMLElement).closest('.pac-container')) {
           e.preventDefault();
           e.stopPropagation();
         }
       };
 
-      // Setup event listeners
       document.addEventListener('click', clickHandler, true);
       document.addEventListener('mousedown', mouseDownHandler, true);
 
       setAutocomplete(autocomplete);
+
+      // Cleanup function
+      return () => {
+        document.removeEventListener('click', clickHandler, true);
+        document.removeEventListener('mousedown', mouseDownHandler, true);
+        if (autocomplete) {
+          google.maps.event.clearInstanceListeners(autocomplete);
+        }
+      };
     };
 
-    // Initialize with a small delay to ensure dialog is mounted
+    // Initialize with a small delay to ensure everything is mounted
     const timeoutId = setTimeout(initAutocomplete, 100);
 
     return () => {
       clearTimeout(timeoutId);
       if (autocomplete) {
         google.maps.event.clearInstanceListeners(autocomplete);
-      }
-      // Clean up event listeners
-      if (clickHandler) {
-        document.removeEventListener('click', clickHandler, true);
-      }
-      if (mouseDownHandler) {
-        document.removeEventListener('mousedown', mouseDownHandler, true);
       }
     };
   }, [onPlaceSelect, onChange]);
