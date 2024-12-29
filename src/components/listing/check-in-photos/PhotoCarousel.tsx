@@ -64,7 +64,6 @@ const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarou
                   const input = e.currentTarget.querySelector('input');
                   if (input) {
                     input.focus();
-                    // Prevent event bubbling
                     e.stopPropagation();
                   }
                 }}
@@ -75,6 +74,7 @@ const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarou
                     const input = e.currentTarget.querySelector('input');
                     if (input) input.focus();
                   }
+                  e.stopPropagation();
                 }}
               >
                 <Input
@@ -82,6 +82,9 @@ const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarou
                   onChange={(e) => onCaptionChange(photo.id, e.target.value)}
                   placeholder="Add a caption..."
                   className="w-full transition-colors hover:border-primary focus-visible:ring-1"
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                  }}
                 />
               </div>
             </div>
