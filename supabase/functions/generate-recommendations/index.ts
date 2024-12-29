@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const corsHeaders = {
@@ -62,6 +63,17 @@ serve(async (req) => {
   try {
     const { address, category, listingId } = await req.json()
     console.log('Generating recommendations for:', { address, category, listingId });
+    
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          persistSession: false,
+        }
+      }
+    )
     
     const config = getCategoryConfig(category);
     
@@ -141,27 +153,18 @@ serve(async (req) => {
     
     console.log('Saving recommendations:', recommendations.length);
     
-    // Insert recommendations into database
-    const response = await fetch(
-      `${Deno.env.get('SUPABASE_URL')}/rest/v1/listing_recommendations`,
-      {
-        method: 'POST',
-        headers: {
-          'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(recommendations)
-      }
-    );
+    // Insert recommendations using Supabase client
+    const { data: savedRecommendations, error: insertError } = await supabaseClient
+      .from('listing_recommendations')
+      .insert(recommendations)
+      .select();
 
-    if (!response.ok) {
+    if (insertError) {
+      console.error('Error saving recommendations:', insertError);
       throw new Error('Failed to save recommendations');
     }
 
-    const savedRecommendations = await response.json();
-    console.log('Successfully saved recommendations:', savedRecommendations.length);
+    console.log('Successfully saved recommendations:', savedRecommendations?.length);
 
     return new Response(
       JSON.stringify({ 
