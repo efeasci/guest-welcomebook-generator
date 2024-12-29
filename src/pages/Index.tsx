@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/App";
 import AddListingDialog from "@/components/AddListingDialog";
 import EditListingDialog from "@/components/EditListingDialog";
 import { Tables } from "@/integrations/supabase/types";
-import { Card } from "@/components/ui/card";
-import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import ShareListingButton from "@/components/ShareListingButton";
+import ListingCard from "@/components/listing/ListingCard";
+import DashboardHeader from "@/components/listing/DashboardHeader";
 
 const placeholderImages = [
   'photo-1649972904349-6e44c42644a7',
@@ -105,18 +103,12 @@ export default function Index() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Welcome{profile?.username ? `, ${profile.username}` : ''}</h1>
-          <p className="text-gray-600">{user?.email}</p>
-        </div>
-        <div className="flex gap-4">
-          <Button onClick={() => setIsAddDialogOpen(true)}>Add Listing</Button>
-          <Button variant="outline" onClick={handleSignOut}>
-            Sign Out
-          </Button>
-        </div>
-      </div>
+      <DashboardHeader 
+        profile={profile}
+        userEmail={user?.email}
+        onAddListing={() => setIsAddDialogOpen(true)}
+        onSignOut={handleSignOut}
+      />
 
       <AddListingDialog 
         open={isAddDialogOpen} 
@@ -136,49 +128,13 @@ export default function Index() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {listings.map((listing, index) => (
-          <Card key={listing.id} className="overflow-hidden">
-            <div className="w-full h-48 relative">
-              {listing.image_url ? (
-                <img 
-                  src={listing.image_url}
-                  alt={listing.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <img 
-                  src={`https://source.unsplash.com/${placeholderImages[index % placeholderImages.length]}`}
-                  alt={listing.title}
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-            <div className="p-6">
-              <h2 className="text-xl font-semibold mb-2">{listing.title}</h2>
-              <p className="text-gray-600 mb-4">{listing.address}</p>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm">Check-in: {listing.check_in}</p>
-                  <p className="text-sm">Check-out: {listing.check_out}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setEditingListing(listing)}
-                  >
-                    Edit
-                  </Button>
-                  <ShareListingButton listingId={listing.id} />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDelete(listing.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            placeholderImage={placeholderImages[index % placeholderImages.length]}
+            onEdit={setEditingListing}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
     </div>
