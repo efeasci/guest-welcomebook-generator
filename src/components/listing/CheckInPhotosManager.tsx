@@ -126,10 +126,13 @@ const CheckInPhotosManager = ({ listingId }: CheckInPhotosManagerProps) => {
     newPhotos.splice(toIndex, 0, movedPhoto);
 
     try {
-      // Update display_order for all affected photos
+      // Create updates with all required fields
       const updates = newPhotos.map((photo, index) => ({
         id: photo.id,
-        display_order: index,
+        listing_id: listingId,
+        photo_url: photo.photo_url,
+        caption: photo.caption,
+        display_order: index
       }));
 
       const { error } = await supabase
