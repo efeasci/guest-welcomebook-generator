@@ -53,17 +53,15 @@ const CategorySection = ({
       setIsGenerating(true);
       console.log('Generating recommendations for category:', category);
       
-      const response = await fetch('/api/generate-recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const { data, error } = await supabase.functions.invoke('generate-recommendations', {
+        body: { 
           listingId, 
           address,
           category,
-        })
+        }
       });
 
-      if (!response.ok) throw new Error('Failed to generate recommendations');
+      if (error) throw error;
 
       toast.success(`Generated recommendations for ${category}`);
       onRecommendationAdded?.();
