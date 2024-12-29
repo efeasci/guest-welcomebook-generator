@@ -58,12 +58,20 @@ const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarou
                   </Button>
                 </div>
               </div>
-              <Input
-                value={photo.caption || ''}
-                onChange={(e) => onCaptionChange(photo.id, e.target.value)}
-                placeholder="Add a caption..."
-                className="mt-2"
-              />
+              <div 
+                className="mt-2 cursor-text" 
+                onClick={(e) => {
+                  const input = e.currentTarget.querySelector('input');
+                  if (input) input.focus();
+                }}
+              >
+                <Input
+                  value={photo.caption || ''}
+                  onChange={(e) => onCaptionChange(photo.id, e.target.value)}
+                  placeholder="Add a caption..."
+                  className="w-full"
+                />
+              </div>
             </div>
           </CarouselItem>
         ))}
