@@ -9,6 +9,7 @@ import ListingWifiFields from "./ListingWifiFields";
 import ListingRulesFields from "./ListingRulesFields";
 import ListingHostFields from "./ListingHostFields";
 import ImageUploadSection from "./ImageUploadSection";
+import RecommendationsManager from "./RecommendationsManager";
 
 interface EditListingFormProps {
   id?: string;
@@ -18,9 +19,9 @@ interface EditListingFormProps {
     wifi_password: string;
     wifi_network: string;
     check_in: string;
-    check_out: string;
-    check_in_method: string;
     check_in_instructions: string;
+    check_in_method: string;
+    check_out: string;
     house_rules: string[];
     before_you_leave: string[];
     image_url: string;
@@ -49,11 +50,9 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
       if (userError) throw userError;
       if (!user) throw new Error("No user found");
 
-      // Prepare the data, ensuring arrays are properly formatted
       const listingData = {
         ...formData,
         user_id: user.id,
-        // Convert string arrays to proper format if they're strings
         house_rules: Array.isArray(formData.house_rules) 
           ? formData.house_rules 
           : typeof formData.house_rules === 'string'
@@ -129,6 +128,13 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
         formData={formData}
         onChange={handleChange}
       />
+
+      {id && (
+        <RecommendationsManager
+          listingId={id}
+          address={formData.address}
+        />
+      )}
 
       <div className="flex justify-end gap-4">
         <Button variant="outline" onClick={() => navigate("/")}>

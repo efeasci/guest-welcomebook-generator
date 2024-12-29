@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      listing_recommendations: {
+        Row: {
+          address: string
+          category: string
+          created_at: string
+          description: string
+          id: string
+          listing_id: string | null
+          location: Json
+          name: string
+          photo: string | null
+        }
+        Insert: {
+          address: string
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          listing_id?: string | null
+          location: Json
+          name: string
+          photo?: string | null
+        }
+        Update: {
+          address?: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          listing_id?: string | null
+          location?: Json
+          name?: string
+          photo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_recommendations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           address: string

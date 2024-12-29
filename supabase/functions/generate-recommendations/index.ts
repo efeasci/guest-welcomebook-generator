@@ -15,13 +15,13 @@ serve(async (req) => {
     const { address, category } = await req.json()
     const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'))
 
-    const prompt = `Generate 3 specific recommendations for ${category} near ${address}. Format the response as a JSON array with objects containing 'name' and 'description' properties. Keep descriptions concise and informative.`
+    const prompt = `Generate 5 specific recommendations for ${category} near ${address}. Format the response as a JSON array with objects containing 'name' and 'description' properties. Keep descriptions concise and informative.`
 
     const response = await hf.textGeneration({
       model: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
       inputs: prompt,
       parameters: {
-        max_new_tokens: 500,
+        max_new_tokens: 1000,
         temperature: 0.7,
       }
     })
