@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { supabase } from "@/integrations/supabase/client";
 
 interface MapProps {
   address: string;
@@ -8,68 +7,75 @@ interface MapProps {
 }
 
 const Map = ({ address, className = "" }: MapProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const map = useRef<google.maps.Map | null>(null);
+  const marker = useRef<google.maps.Marker | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const initializeMap = async () => {
+    const initMap = async () => {
       try {
-        // Initialize map
-        mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHRxbmJyOGUwMXBqMmlvNjZ5ZWV2OXJ2In0.JRlKGLGiDuGcHgbXDwgYlw';
-        
-        map.current = new mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/streets-v12',
-          zoom: 15,
-        });
+        const { data: { api_key }, error } = await supabase.functions.invoke('get-google-maps-key');
+        if (error) throw error;
 
-        // Add navigation controls
-        map.current.addControl(
-          new mapboxgl.NavigationControl(),
-          'top-right'
-        );
+        if (!window.google) {
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${api_key}&libraries=places`;
+          script.async = true;
+          script.defer = true;
+          document.head.appendChild(script);
 
-        // Geocode the address and center the map
-        const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-            address
-          )}.json?access_token=${mapboxgl.accessToken}`
-        );
-        const data = await response.json();
-
-        if (data.features && data.features.length > 0) {
-          const [lng, lat] = data.features[0].center;
-          
-          map.current.setCenter([lng, lat]);
-
-          // Add marker
-          if (marker.current) {
-            marker.current.remove();
-          }
-          marker.current = new mapboxgl.Marker()
-            .setLngLat([lng, lat])
-            .addTo(map.current);
+          script.onload = () => createMap();
+        } else {
+          createMap();
         }
       } catch (error) {
-        console.error('Error initializing map:', error);
+        console.error('Error initializing Google Maps:', error);
       }
     };
 
-    initializeMap();
+    const createMap = () => {
+      if (!mapRef.current) return;
+
+      // Initialize the map
+      map.current = new google.maps.Map(mapRef.current, {
+        zoom: 15,
+        center: { lat: 0, lng: 0 },
+      });
+
+      // Initialize the geocoder
+      const geocoder = new google.maps.Geocoder();
+
+      // Geocode the address
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          const location = results[0].geometry.location;
+          
+          map.current?.setCenter(location);
+
+          if (marker.current) {
+            marker.current.setMap(null);
+          }
+
+          marker.current = new google.maps.Marker({
+            map: map.current,
+            position: location,
+          });
+        }
+      });
+    };
+
+    initMap();
 
     return () => {
-      if (map.current) {
-        map.current.remove();
+      if (marker.current) {
+        marker.current.setMap(null);
       }
     };
   }, [address]);
 
   return (
     <div className={`relative ${className}`}>
-      <div ref={mapContainer} className="w-full h-full rounded-lg" />
+      <div ref={mapRef} className="w-full h-full rounded-lg" />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import AddressAutocomplete from "../AddressAutocomplete";
 
 interface ListingBasicFieldsProps {
   formData: {
@@ -64,11 +65,9 @@ const ListingBasicFields = ({ formData, onChange, onAirbnbSync }: ListingBasicFi
         <label htmlFor="address" className="text-sm font-medium">
           Address
         </label>
-        <Input
-          id="address"
+        <AddressAutocomplete
           value={formData.address}
-          onChange={(e) => onChange("address", e.target.value)}
-          required
+          onChange={(address) => onChange("address", address)}
         />
       </div>
       <div className="space-y-2">
