@@ -19,6 +19,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         if (error) throw error;
 
         if (!window.google) {
+          console.log('Loading Google Maps script...');
           const script = document.createElement('script');
           script.src = `https://maps.googleapis.com/maps/api/js?key=${api_key}&libraries=places`;
           script.async = true;
@@ -26,6 +27,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
           document.head.appendChild(script);
 
           script.onload = () => {
+            console.log('Google Maps script loaded');
             initPlacesAutocomplete();
           };
         } else {
@@ -45,7 +47,8 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
-        if (place.name && place.formatted_address) {
+        if (place.name) {
+          onChange(place.name); // Update the input value with the selected place name
           onPlaceSelect(place);
         }
       });
@@ -60,7 +63,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         google.maps.event.clearInstanceListeners(autocomplete);
       }
     };
-  }, [onPlaceSelect]);
+  }, [onPlaceSelect, onChange]);
 
   return (
     <div className="space-y-2">
@@ -70,6 +73,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search for a place..."
+        className="w-full"
       />
     </div>
   );

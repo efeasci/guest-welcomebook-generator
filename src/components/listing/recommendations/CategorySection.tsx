@@ -8,16 +8,18 @@ import type { Recommendation } from "./types";
 
 interface CategorySectionProps {
   category: string;
+  listingId: string;
   recommendations: Recommendation[];
-  loading: boolean;
-  onGenerateMore: (category: string) => Promise<void>;
   onRemoveRecommendation: (id: string) => Promise<void>;
+  onRecommendationAdded?: () => void;
 }
 
 const CategorySection = ({
   category,
+  listingId,
   recommendations,
   onRemoveRecommendation,
+  onRecommendationAdded
 }: CategorySectionProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -57,8 +59,10 @@ const CategorySection = ({
 
           <AddRecommendationDialog
             category={category}
+            listingId={listingId}
             isOpen={isDialogOpen}
             onOpenChange={setIsDialogOpen}
+            onSuccess={onRecommendationAdded}
           />
         </div>
       </AccordionContent>

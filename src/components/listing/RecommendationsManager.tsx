@@ -60,9 +60,8 @@ const RecommendationsManager = ({ listingId }: RecommendationsManagerProps) => {
     }
   };
 
-  // Updated to return a Promise
-  const handleGenerateMore = async (category: string): Promise<void> => {
-    return Promise.resolve();
+  const handleRecommendationAdded = () => {
+    queryClient.invalidateQueries({ queryKey: ['saved-recommendations', listingId] });
   };
 
   if (isSavedLoading) {
@@ -88,10 +87,10 @@ const RecommendationsManager = ({ listingId }: RecommendationsManagerProps) => {
             <CategorySection
               key={category}
               category={category}
+              listingId={listingId}
               recommendations={categoryRecommendations}
-              loading={loading[category] || false}
-              onGenerateMore={handleGenerateMore}
               onRemoveRecommendation={removeRecommendation}
+              onRecommendationAdded={handleRecommendationAdded}
             />
           );
         })}

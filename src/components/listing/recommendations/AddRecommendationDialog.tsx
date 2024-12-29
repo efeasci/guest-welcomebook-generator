@@ -1,18 +1,26 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import PlaceSearch from "./PlaceSearch";
 
 interface AddRecommendationDialogProps {
   category: string;
+  listingId: string;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-const AddRecommendationDialog = ({ category, isOpen, onOpenChange }: AddRecommendationDialogProps) => {
+const AddRecommendationDialog = ({ 
+  category, 
+  listingId,
+  isOpen, 
+  onOpenChange,
+  onSuccess 
+}: AddRecommendationDialogProps) => {
   const [searchInput, setSearchInput] = useState("");
   const [description, setDescription] = useState("");
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
@@ -25,6 +33,7 @@ const AddRecommendationDialog = ({ category, isOpen, onOpenChange }: AddRecommen
 
     try {
       const newRecommendation = {
+        listing_id: listingId,
         name: selectedPlace.name,
         description: description,
         address: selectedPlace.formatted_address,
@@ -47,10 +56,16 @@ const AddRecommendationDialog = ({ category, isOpen, onOpenChange }: AddRecommen
       setSearchInput("");
       setDescription("");
       setSelectedPlace(null);
+      onSuccess?.();
     } catch (error) {
       console.error('Error adding recommendation:', error);
       toast.error('Failed to add recommendation');
     }
+  };
+
+  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    console.log('Selected place:', place);
+    setSelectedPlace(place);
   };
 
   return (
@@ -58,19 +73,27 @@ const AddRecommendationDialog = ({ category, isOpen, onOpenChange }: AddRecommen
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Recommendation</DialogTitle>
+          <DialogDescription>
+            Search for a place and add your personal recommendation
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <PlaceSearch
             value={searchInput}
             onChange={setSearchInput}
-            onPlaceSelect={setSelectedPlace}
+            onPlaceSelect={handlePlaceSelect}
           />
+          {selectedPlace && (
+            <div className="text-sm text-muted-foreground">
+              Selected: {selectedPlace.name} ({selectedPlace.formatted_address})
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-sm font-medium">Description</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add a description..."
+              placeholder="Add your personal recommendation..."
             />
           </div>
           <Button 
