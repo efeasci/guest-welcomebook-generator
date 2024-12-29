@@ -18,9 +18,10 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
 
       console.log('Setting up autocomplete...');
       const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
-        types: ['establishment'], // Only allow establishment searches
+        types: ['establishment'],
       });
 
+      // Handle place selection (both click and enter key)
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         console.log('Place selected:', place);
@@ -33,7 +34,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         }
       });
 
-      // Handle mousedown on pac-container to prevent it from being closed
+      // Handle mousedown on pac-container
       const handleMousedown = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         if (target.closest('.pac-container')) {
@@ -61,23 +62,42 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
             searchInputRef.current.value = fullText;
             onChange(fullText);
             
-            setTimeout(() => {
-              if (autocomplete) {
-                google.maps.event.trigger(autocomplete, 'place_changed');
+            // Trigger place_changed event after click
+            if (autocomplete) {
+              google.maps.event.trigger(autocomplete, 'place_changed');
+            }
+          }
+        }
+      };
+
+      // Handle keyboard events
+      const handleKeydown = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.pac-container') || target === searchInputRef.current) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (autocomplete) {
+              const place = autocomplete.getPlace();
+              if (place) {
+                const placeAddress = place.formatted_address || place.name || '';
+                onChange(placeAddress);
+                onPlaceSelect(place);
               }
-            }, 50);
+            }
           }
         }
       };
 
       document.addEventListener('mousedown', handleMousedown, true);
       document.addEventListener('click', handleClick, true);
+      document.addEventListener('keydown', handleKeydown, true);
 
       setAutocomplete(autocomplete);
 
       return () => {
         document.removeEventListener('mousedown', handleMousedown, true);
         document.removeEventListener('click', handleClick, true);
+        document.removeEventListener('keydown', handleKeydown, true);
         if (autocomplete) {
           google.maps.event.clearInstanceListeners(autocomplete);
         }
