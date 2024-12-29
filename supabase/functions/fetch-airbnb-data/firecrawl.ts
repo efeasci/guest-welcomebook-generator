@@ -7,7 +7,7 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
     const requestBody = {
       url: airbnbUrl,
       limit: 1,
-      scrapeRules: {
+      rules: {
         title: {
           selector: '[data-testid="listing-title"]',
           type: 'text'
