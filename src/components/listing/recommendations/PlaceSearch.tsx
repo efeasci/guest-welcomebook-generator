@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PlaceSearchProps {
@@ -46,29 +46,33 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
       if (!searchInputRef.current) return;
 
       const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
-        types: ['establishment'],
-        fields: ['name', 'formatted_address', 'place_id', 'geometry', 'photos']
+        types: ['establishment', 'address'],
       });
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
-        console.log('Selected place:', place);
-        
-        // Check if place exists and has required properties before proceeding
-        if (!place || !place.geometry) {
-          console.log('No valid place selected');
-          return;
-        }
+        console.log('Place changed event triggered:', place);
 
-        // Only update if we have a valid place with a name
-        if (place.name) {
+        if (place && place.formatted_address) {
+          console.log('Updating with formatted address:', place.formatted_address);
+          onChange(place.formatted_address);
+          onPlaceSelect(place);
+        } else if (place && place.name) {
+          console.log('Updating with place name:', place.name);
           onChange(place.name);
           onPlaceSelect(place);
         }
       });
 
-      // Handle clicks on autocomplete suggestions
-      const clickHandler = (e: MouseEvent) => {
+      const handleMousedown = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.pac-container')) {
+          e.preventDefault();
+          console.log('Prevented default mousedown on pac-container');
+        }
+      };
+
+      const handleClick = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         const pacItem = target.closest('.pac-item');
         
@@ -80,48 +84,41 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
           const secondaryText = pacItem.textContent?.replace(mainText, '').trim() || '';
           const fullText = `${mainText} ${secondaryText}`.trim();
           
+          console.log('Pac item clicked, full text:', fullText);
+          
           if (searchInputRef.current) {
             searchInputRef.current.value = fullText;
             onChange(fullText);
-
-            // Trigger place_changed event after a short delay
+            
+            // Trigger place_changed event
             setTimeout(() => {
               if (autocomplete) {
                 google.maps.event.trigger(autocomplete, 'place_changed');
               }
-            }, 100);
+            }, 50);
           }
         }
       };
 
-      // Prevent focus loss in dialog
-      const mouseDownHandler = (e: MouseEvent) => {
-        if ((e.target as HTMLElement).closest('.pac-container')) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      };
-
-      document.addEventListener('click', clickHandler, true);
-      document.addEventListener('mousedown', mouseDownHandler, true);
+      document.addEventListener('mousedown', handleMousedown, true);
+      document.addEventListener('click', handleClick, true);
 
       setAutocomplete(autocomplete);
 
-      // Cleanup function
       return () => {
-        document.removeEventListener('click', clickHandler, true);
-        document.removeEventListener('mousedown', mouseDownHandler, true);
+        document.removeEventListener('mousedown', handleMousedown, true);
+        document.removeEventListener('click', handleClick, true);
         if (autocomplete) {
           google.maps.event.clearInstanceListeners(autocomplete);
         }
       };
     };
 
-    // Initialize with a small delay to ensure everything is mounted
-    const timeoutId = setTimeout(initAutocomplete, 100);
-
+    const cleanup = initAutocomplete();
     return () => {
-      clearTimeout(timeoutId);
+      if (typeof cleanup === 'function') {
+        cleanup();
+      }
       if (autocomplete) {
         google.maps.event.clearInstanceListeners(autocomplete);
       }
