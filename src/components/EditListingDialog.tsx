@@ -6,12 +6,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import ListingBasicFields from "./listing/ListingBasicFields";
+import ListingCheckInFields from "./listing/ListingCheckInFields";
+import ListingRulesFields from "./listing/ListingRulesFields";
 
 interface EditListingDialogProps {
   listing: {
@@ -47,6 +48,10 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
     before_you_leave: listing.before_you_leave?.join("\n") || "",
   });
 
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Submitting edit form:", formData);
@@ -81,118 +86,9 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
           <DialogTitle>Edit Listing</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="title" className="text-sm font-medium">
-              Title
-            </label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="address" className="text-sm font-medium">
-              Address
-            </label>
-            <Input
-              id="address"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="airbnb_link" className="text-sm font-medium">
-              Airbnb Link
-            </label>
-            <Input
-              id="airbnb_link"
-              value={formData.airbnb_link}
-              onChange={(e) => setFormData({ ...formData, airbnb_link: e.target.value })}
-              placeholder="Enter Airbnb listing URL"
-            />
-          </div>
-          <div>
-            <label htmlFor="image_url" className="text-sm font-medium">
-              Image URL
-            </label>
-            <Input
-              id="image_url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              placeholder="Enter image URL"
-            />
-          </div>
-          <div>
-            <label htmlFor="check_in_method" className="text-sm font-medium">
-              Check-in Method
-            </label>
-            <Input
-              id="check_in_method"
-              value={formData.check_in_method}
-              onChange={(e) => setFormData({ ...formData, check_in_method: e.target.value })}
-              placeholder="Enter check-in instructions"
-            />
-          </div>
-          <div>
-            <label htmlFor="wifi" className="text-sm font-medium">
-              WiFi Password
-            </label>
-            <Input
-              id="wifi"
-              value={formData.wifi_password}
-              onChange={(e) => setFormData({ ...formData, wifi_password: e.target.value })}
-            />
-          </div>
-          <div>
-            <label htmlFor="check_in" className="text-sm font-medium">
-              Check-in Time
-            </label>
-            <Input
-              id="check_in"
-              type="time"
-              value={formData.check_in}
-              onChange={(e) => setFormData({ ...formData, check_in: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="check_out" className="text-sm font-medium">
-              Check-out Time
-            </label>
-            <Input
-              id="check_out"
-              type="time"
-              value={formData.check_out}
-              onChange={(e) => setFormData({ ...formData, check_out: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="rules" className="text-sm font-medium">
-              House Rules (one per line)
-            </label>
-            <Textarea
-              id="rules"
-              value={formData.house_rules}
-              onChange={(e) => setFormData({ ...formData, house_rules: e.target.value })}
-              rows={4}
-            />
-          </div>
-          <div>
-            <label htmlFor="before_you_leave" className="text-sm font-medium">
-              Before You Leave (one per line)
-            </label>
-            <Textarea
-              id="before_you_leave"
-              value={formData.before_you_leave}
-              onChange={(e) => setFormData({ ...formData, before_you_leave: e.target.value })}
-              rows={4}
-              placeholder="Enter checkout instructions"
-            />
-          </div>
+          <ListingBasicFields formData={formData} onChange={handleFieldChange} />
+          <ListingCheckInFields formData={formData} onChange={handleFieldChange} />
+          <ListingRulesFields formData={formData} onChange={handleFieldChange} />
           <DialogFooter>
             <Button type="submit">Save changes</Button>
           </DialogFooter>
