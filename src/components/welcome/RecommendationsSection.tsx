@@ -38,6 +38,7 @@ const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
   const [recommendations, setRecommendations] = useState<Record<string, Recommendation[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
+  const [hasAnyRecommendations, setHasAnyRecommendations] = useState(false);
 
   const fetchRecommendations = async (category: string) => {
     if (recommendations[category]?.length > 0) return;
@@ -50,10 +51,18 @@ const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
 
       if (error) throw error;
 
-      setRecommendations(prev => ({
-        ...prev,
-        [category]: data.recommendations
-      }));
+      setRecommendations(prev => {
+        const newRecs = {
+          ...prev,
+          [category]: data.recommendations
+        };
+        
+        // Check if there are any recommendations across all categories
+        const hasRecs = Object.values(newRecs).some(recs => recs && recs.length > 0);
+        setHasAnyRecommendations(hasRecs);
+        
+        return newRecs;
+      });
     } catch (err) {
       console.error('Error fetching recommendations:', err);
       setError('Failed to load recommendations. Please try again later.');
@@ -62,9 +71,20 @@ const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
     }
   };
 
+  useEffect(() => {
+    // Check for any existing recommendations on mount
+    const hasRecs = Object.values(recommendations).some(recs => recs && recs.length > 0);
+    setHasAnyRecommendations(hasRecs);
+  }, []);
+
   const getGoogleMapsUrl = (location: { lat: number; lng: number }) => {
     return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
   };
+
+  // If there are no recommendations, don't render anything
+  if (!hasAnyRecommendations && !Object.values(loading).some(isLoading => isLoading)) {
+    return null;
+  }
 
   return (
     <section className="space-y-4">
