@@ -27,6 +27,7 @@ interface EditListingDialogProps {
     airbnb_link?: string | null;
     image_url?: string | null;
     check_in_method?: string | null;
+    check_in_instructions?: string | null;
     before_you_leave?: string[] | null;
   };
   open: boolean;
@@ -46,6 +47,7 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
     house_rules: listing.house_rules?.join("\n") || "",
     image_url: listing.image_url || "",
     check_in_method: listing.check_in_method || "",
+    check_in_instructions: listing.check_in_instructions || "",
     before_you_leave: listing.before_you_leave?.join("\n") || "",
   });
 

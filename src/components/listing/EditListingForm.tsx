@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ImagePlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ListingBasicFields from "./ListingBasicFields";
 import ListingCheckInFields from "./ListingCheckInFields";
 import ListingWifiFields from "./ListingWifiFields";
 import ListingRulesFields from "./ListingRulesFields";
 import ListingHostFields from "./ListingHostFields";
+import ImageUploadSection from "./ImageUploadSection";
 
 interface EditListingFormProps {
   id?: string;
@@ -35,37 +35,7 @@ interface EditListingFormProps {
 
 const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
   const navigate = useNavigate();
-  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState(initialData);
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${id || 'new'}/${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from("listing-images")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("listing-images")
-        .getPublicUrl(filePath);
-
-      setFormData(prev => ({ ...prev, image_url: publicUrl }));
-      toast.success("Image uploaded successfully");
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error("Failed to upload image");
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -80,12 +50,6 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
       const listingData = {
         ...formData,
         user_id: user.id,
-        house_rules: Array.isArray(formData.house_rules) 
-          ? formData.house_rules 
-          : formData.house_rules.split("\n").filter(rule => rule.trim()),
-        before_you_leave: Array.isArray(formData.before_you_leave)
-          ? formData.before_you_leave
-          : formData.before_you_leave.split("\n").filter(rule => rule.trim()),
       };
 
       const { data, error } = id
@@ -116,43 +80,11 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
 
   return (
     <div className="space-y-8">
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Listing Image</h2>
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-            />
-            <label htmlFor="image-upload">
-              <Button 
-                variant="outline" 
-                disabled={isUploading}
-                className="cursor-pointer"
-                asChild
-              >
-                <span>
-                  <ImagePlus className="h-4 w-4 mr-2" />
-                  {isUploading ? "Uploading..." : "Upload listing image"}
-                </span>
-              </Button>
-            </label>
-          </div>
-        </div>
-        
-        {formData.image_url && (
-          <div className="w-full h-48 relative">
-            <img
-              src={formData.image_url}
-              alt={formData.title}
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
-        )}
-      </div>
+      <ImageUploadSection
+        id={id}
+        imageUrl={formData.image_url}
+        onImageUpload={(url) => handleChange("image_url", url)}
+      />
 
       <ListingBasicFields
         formData={formData}
