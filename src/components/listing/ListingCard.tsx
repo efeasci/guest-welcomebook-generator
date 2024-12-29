@@ -3,8 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { Eye, Trash2 } from "lucide-react";
 import ShareListingButton from "@/components/ShareListingButton";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ListingCardProps {
   listing: Tables<"listings">;
@@ -37,7 +35,7 @@ export default function ListingCard({ listing, placeholderImage, onEdit, onDelet
       </div>
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-2">{listing.title}</h2>
-        <p className="text-gray-600 mb-4">{listing.address}</p>
+        <p className="text-gray-600 mb-4 line-clamp-2 min-h-[3rem]">{listing.address}</p>
         <div className="flex justify-between items-center">
           <div>
             <p className="text-sm">Check-in: {listing.check_in}</p>
