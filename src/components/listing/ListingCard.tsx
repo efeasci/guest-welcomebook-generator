@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
-import { Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import ShareListingButton from "@/components/ShareListingButton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,10 @@ interface ListingCardProps {
 }
 
 export default function ListingCard({ listing, placeholderImage, onEdit, onDelete }: ListingCardProps) {
+  const handlePreview = () => {
+    window.open(`/welcome/${listing.id}`, '_blank');
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="w-full h-48 relative">
@@ -45,6 +49,14 @@ export default function ListingCard({ listing, placeholderImage, onEdit, onDelet
               onClick={() => onEdit(listing)}
             >
               Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePreview}
+              title="Preview listing"
+            >
+              <Eye className="h-4 w-4" />
             </Button>
             <ShareListingButton listingId={listing.id} />
             <Button
