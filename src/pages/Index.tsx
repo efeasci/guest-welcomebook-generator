@@ -4,7 +4,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/App";
 import AddListingDialog from "@/components/AddListingDialog";
-import EditListingDialog from "@/components/EditListingDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import ListingCard from "@/components/listing/ListingCard";
@@ -28,7 +27,6 @@ export default function Index() {
   const [listings, setListings] = useState<Tables<"listings">[]>([]);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingListing, setEditingListing] = useState<Tables<"listings"> | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -115,24 +113,13 @@ export default function Index() {
         onOpenChange={setIsAddDialogOpen}
       />
 
-      {editingListing && (
-        <EditListingDialog 
-          listing={editingListing}
-          open={!!editingListing}
-          onOpenChange={(open) => !open && setEditingListing(null)}
-          onSuccess={() => {
-            toast("Listing updated successfully");
-          }}
-        />
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {listings.map((listing, index) => (
           <ListingCard
             key={listing.id}
             listing={listing}
             placeholderImage={placeholderImages[index % placeholderImages.length]}
-            onEdit={setEditingListing}
+            onEdit={(listing) => navigate(`/edit/${listing.id}`)}
             onDelete={handleDelete}
           />
         ))}

@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import Index from "./pages/Index";
 import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
+import EditListing from "./pages/EditListing";
 import { supabase } from "./integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -69,6 +70,14 @@ const App = () => {
               <Route
                 path="/welcome/:id"
                 element={<Welcome />}
+              />
+              <Route
+                path="/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditListing />
+                  </ProtectedRoute>
+                }
               />
             </Routes>
           </BrowserRouter>
