@@ -8,8 +8,21 @@ import AddListingDialog from "@/components/AddListingDialog";
 import EditListingDialog from "@/components/EditListingDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Card } from "@/components/ui/card";
-import { Trash2 } from "lucide-react";
+import { Trash2, Image } from "lucide-react";
 import { toast } from "sonner";
+import ShareListingButton from "@/components/ShareListingButton";
+
+// Array of placeholder image IDs
+const placeholderImages = [
+  'photo-1649972904349-6e44c42644a7',
+  'photo-1488590528505-98d2b5aba04b',
+  'photo-1518770660439-4636190af475',
+  'photo-1461749280684-dccba630e2f6',
+  'photo-1486312338219-ce68d2c6f44d',
+  'photo-1581091226825-a6a2a5aee158',
+  'photo-1485827404703-89b55fcc595e',
+  'photo-1526374965328-7f61d4dc18c5'
+];
 
 export default function Index() {
   const { user } = useAuth();
@@ -123,29 +136,39 @@ export default function Index() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {listings.map((listing) => (
-          <Card key={listing.id} className="p-6">
-            <h2 className="text-xl font-semibold mb-2">{listing.title}</h2>
-            <p className="text-gray-600 mb-4">{listing.address}</p>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm">Check-in: {listing.check_in}</p>
-                <p className="text-sm">Check-out: {listing.check_out}</p>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline"
-                  onClick={() => setEditingListing(listing)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleDelete(listing.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+        {listings.map((listing, index) => (
+          <Card key={listing.id} className="overflow-hidden">
+            <div className="w-full h-48 relative">
+              <img 
+                src={`https://source.unsplash.com/${placeholderImages[index % placeholderImages.length]}`}
+                alt={listing.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-2">{listing.title}</h2>
+              <p className="text-gray-600 mb-4">{listing.address}</p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm">Check-in: {listing.check_in}</p>
+                  <p className="text-sm">Check-out: {listing.check_out}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setEditingListing(listing)}
+                  >
+                    Edit
+                  </Button>
+                  <ShareListingButton listingId={listing.id} />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleDelete(listing.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
