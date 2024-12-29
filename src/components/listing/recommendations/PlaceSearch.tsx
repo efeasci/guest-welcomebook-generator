@@ -10,7 +10,8 @@ interface PlaceSearchProps {
 }
 
 const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
-  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
+  const [autocompleteService, setAutocompleteService] = useState<google.maps.places.AutocompleteService | null>(null);
+  const [placesService, setPlacesService] = useState<google.maps.places.PlacesService | null>(null);
 
   useEffect(() => {
     const initGoogleMaps = async () => {
@@ -28,6 +29,19 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
           script.async = true;
           script.defer = true;
           document.head.appendChild(script);
+
+          script.onload = () => {
+            setAutocompleteService(new google.maps.places.AutocompleteService());
+            // Create a dummy div for PlacesService (required but not visible)
+            const mapDiv = document.createElement('div');
+            const map = new google.maps.Map(mapDiv);
+            setPlacesService(new google.maps.places.PlacesService(map));
+          };
+        } else {
+          setAutocompleteService(new google.maps.places.AutocompleteService());
+          const mapDiv = document.createElement('div');
+          const map = new google.maps.Map(mapDiv);
+          setPlacesService(new google.maps.places.PlacesService(map));
         }
       } catch (error) {
         console.error('Error initializing Google Maps:', error);
@@ -42,11 +56,11 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
     const removeStyles = addCustomStyles();
     
     // Handle click events on pac-items
-    const handleClick = (e: MouseEvent) => {
+    const handleClick = async (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const pacItem = target.closest('.pac-item');
       
-      if (pacItem) {
+      if (pacItem && placesService) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -57,14 +71,19 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         console.log('Pac item clicked, full text:', fullText);
         onChange(fullText);
 
-        // Create a simplified place result
-        const place: google.maps.places.PlaceResult = {
-          name: mainText,
-          formatted_address: fullText,
+        // Get place details using Places Service
+        const request = {
+          query: fullText,
+          fields: ['name', 'geometry', 'formatted_address', 'photos']
         };
-        
-        setSelectedPlace(place);
-        onPlaceSelect(place);
+
+        placesService.findPlaceFromQuery(request, (results, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0]) {
+            const place = results[0];
+            console.log('Place details retrieved:', place);
+            onPlaceSelect(place);
+          }
+        });
       }
     };
 
@@ -74,11 +93,10 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
       removeStyles();
       document.removeEventListener('click', handleClick, true);
     };
-  }, [onChange, onPlaceSelect]);
+  }, [onChange, onPlaceSelect, placesService]);
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     console.log('Place selected:', place);
-    setSelectedPlace(place);
     onPlaceSelect(place);
     if (place.formatted_address) {
       onChange(place.formatted_address);
