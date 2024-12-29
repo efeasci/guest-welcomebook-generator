@@ -34,6 +34,32 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         }
       });
 
+      // Add custom styles to highlight suggestions on hover
+      const addCustomStyles = () => {
+        const style = document.createElement('style');
+        style.textContent = `
+          .pac-container {
+            z-index: 1000;
+            border-radius: 0.375rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          }
+          .pac-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+          }
+          .pac-item:hover {
+            background-color: #e5edff;
+          }
+          .pac-item-selected {
+            background-color: #e5edff;
+          }
+        `;
+        document.head.appendChild(style);
+      };
+      addCustomStyles();
+
       // Handle mousedown on pac-container
       const handleMousedown = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
@@ -88,9 +114,26 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         }
       };
 
+      // Handle mouseover on pac-items
+      const handleMouseover = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        const pacItem = target.closest('.pac-item');
+        
+        if (pacItem) {
+          // Remove selected class from all items
+          document.querySelectorAll('.pac-item').forEach(item => {
+            item.classList.remove('pac-item-selected');
+          });
+          
+          // Add selected class to hovered item
+          pacItem.classList.add('pac-item-selected');
+        }
+      };
+
       document.addEventListener('mousedown', handleMousedown, true);
       document.addEventListener('click', handleClick, true);
       document.addEventListener('keydown', handleKeydown, true);
+      document.addEventListener('mouseover', handleMouseover, true);
 
       setAutocomplete(autocomplete);
 
@@ -98,6 +141,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         document.removeEventListener('mousedown', handleMousedown, true);
         document.removeEventListener('click', handleClick, true);
         document.removeEventListener('keydown', handleKeydown, true);
+        document.removeEventListener('mouseover', handleMouseover, true);
         if (autocomplete) {
           google.maps.event.clearInstanceListeners(autocomplete);
         }
