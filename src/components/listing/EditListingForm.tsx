@@ -43,14 +43,30 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
 
   const handleSubmit = async () => {
     try {
+      console.log("Submitting form data:", formData);
+      
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error("No user found");
 
+      // Prepare the data, ensuring arrays are properly formatted
       const listingData = {
         ...formData,
         user_id: user.id,
+        // Convert string arrays to proper format if they're strings
+        house_rules: Array.isArray(formData.house_rules) 
+          ? formData.house_rules 
+          : typeof formData.house_rules === 'string'
+            ? formData.house_rules.split('\n').filter(rule => rule.trim())
+            : [],
+        before_you_leave: Array.isArray(formData.before_you_leave)
+          ? formData.before_you_leave
+          : typeof formData.before_you_leave === 'string'
+            ? formData.before_you_leave.split('\n').filter(instruction => instruction.trim())
+            : []
       };
+
+      console.log("Prepared listing data:", listingData);
 
       const { data, error } = id
         ? await supabase
@@ -65,7 +81,10 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
             .select()
             .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       toast.success(id ? "Listing updated successfully" : "Listing created successfully");
       
