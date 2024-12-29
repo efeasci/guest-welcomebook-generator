@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,7 @@ import type { Recommendation } from "./types";
 interface CategorySectionProps {
   category: string;
   listingId: string;
+  address: string;
   recommendations: Recommendation[];
   onRemoveRecommendation: (id: string) => Promise<void>;
   onRecommendationAdded?: () => void;
@@ -20,11 +21,13 @@ interface CategorySectionProps {
 const CategorySection = ({
   category,
   listingId,
+  address,
   recommendations,
   onRemoveRecommendation,
   onRecommendationAdded
 }: CategorySectionProps) => {
   const [isAdding, setIsAdding] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [description, setDescription] = useState("");
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
@@ -39,10 +42,36 @@ const CategorySection = ({
 
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value);
-    // Only clear selected place if user manually changes the input to something different
     if (selectedPlace && value !== selectedPlace.name && value !== selectedPlace.formatted_address) {
       console.log('Clearing selected place because input changed');
       setSelectedPlace(null);
+    }
+  };
+
+  const handleGenerateRecommendations = async () => {
+    try {
+      setIsGenerating(true);
+      console.log('Generating recommendations for category:', category);
+      
+      const response = await fetch('/api/generate-recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          listingId, 
+          address,
+          category,
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to generate recommendations');
+
+      toast.success(`Generated recommendations for ${category}`);
+      onRecommendationAdded?.();
+    } catch (error) {
+      console.error('Error generating recommendations:', error);
+      toast.error(`Failed to generate recommendations for ${category}`);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -112,16 +141,28 @@ const CategorySection = ({
             </div>
           )}
 
-          {!isAdding ? (
+          <div className="flex gap-2">
             <Button
               variant="outline"
-              className="w-full"
+              className="flex-1"
               onClick={() => setIsAdding(true)}
+              disabled={isAdding}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Recommendation
             </Button>
-          ) : (
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleGenerateRecommendations}
+              disabled={isGenerating}
+            >
+              <Wand2 className="h-4 w-4 mr-2" />
+              {isGenerating ? 'Generating...' : 'Generate'}
+            </Button>
+          </div>
+
+          {isAdding && (
             <div className="space-y-4 border rounded-lg p-4">
               <PlaceSearch
                 value={searchInput}

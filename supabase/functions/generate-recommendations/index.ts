@@ -7,109 +7,156 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const getCategoryConfig = (category: string) => {
+  switch (category) {
+    case "Places to Eat":
+      return {
+        type: "restaurant",
+        radius: 3200, // 2 miles in meters
+        minRating: 4,
+        description: "restaurants"
+      };
+    case "Coffee Shops":
+      return {
+        type: "cafe",
+        radius: 3200,
+        minRating: 4,
+        description: "cafes and coffee shops"
+      };
+    case "Bars & Wineries":
+      return {
+        type: "bar",
+        radius: 3200,
+        minRating: 4,
+        description: "bars and pubs"
+      };
+    case "Nearest Shopping":
+      return {
+        type: "supermarket",
+        radius: 1600, // 1 mile in meters
+        minRating: 3,
+        description: "grocery stores and supermarkets"
+      };
+    case "Things to Do":
+      return {
+        type: "tourist_attraction",
+        radius: 8000, // 5 miles in meters
+        minRating: 4,
+        description: "attractions and activities"
+      };
+    default:
+      return {
+        type: "point_of_interest",
+        radius: 3200,
+        minRating: 4,
+        description: "places"
+      };
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { address, category } = await req.json()
-    console.log('Received request with address:', address, 'and category:', category)
+    const { address, category, listingId } = await req.json()
+    console.log('Received request with address:', address, 'category:', category)
     
-    const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'))
-
-    const prompt = `Generate exactly 5 specific recommendations for ${category} near ${address}. Format the response as a JSON array with objects containing 'name' and 'description' properties. Keep descriptions concise and informative.`
-
-    console.log('Generating recommendations with prompt:', prompt)
-
-    const response = await hf.textGeneration({
-      model: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
-      inputs: prompt,
-      parameters: {
-        max_new_tokens: 1000,
-        temperature: 0.7,
-      }
-    })
-
-    let recommendations = []
-    try {
-      const jsonStr = response.generated_text.match(/\[.*\]/s)?.[0]
-      if (jsonStr) {
-        recommendations = JSON.parse(jsonStr)
-        console.log('Parsed recommendations:', recommendations)
-      }
-    } catch (e) {
-      console.error('Error parsing recommendations:', e)
-      throw new Error('Failed to parse recommendations')
+    const config = getCategoryConfig(category);
+    
+    // First get the geocoded location for the address
+    const geocodeResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+    );
+    const geocodeData = await geocodeResponse.json();
+    
+    if (!geocodeData.results?.[0]?.geometry?.location) {
+      throw new Error('Could not geocode address');
     }
-
-    // Get existing recommendations to avoid duplicates
-    const { data: existingRecs, error: fetchError } = await fetch(
-      `${Deno.env.get('SUPABASE_URL')}/rest/v1/listing_recommendations?select=name`,
+    
+    const { lat, lng } = geocodeData.results[0].geometry.location;
+    
+    // Search for places using the Places API
+    const placesResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${config.radius}&type=${config.type}&minrating=${config.minRating}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+    );
+    const placesData = await placesResponse.json();
+    
+    if (!placesData.results) {
+      throw new Error('No places found');
+    }
+    
+    // Filter and sort places by rating
+    const topPlaces = placesData.results
+      .filter((place: any) => place.rating >= config.minRating)
+      .sort((a: any, b: any) => b.rating - a.rating)
+      .slice(0, 5);
+    
+    // Get more details for each place
+    const detailedPlaces = await Promise.all(
+      topPlaces.map(async (place: any) => {
+        const detailsResponse = await fetch(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,rating,photos,geometry&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+        );
+        const detailsData = await detailsResponse.json();
+        return detailsData.result;
+      })
+    );
+    
+    // Generate descriptions using AI
+    const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'))
+    const descriptions = await Promise.all(
+      detailedPlaces.map(async (place: any) => {
+        const prompt = `Write a short, engaging description for ${place.name}, which is a ${config.description} located at ${place.formatted_address}. Include its rating of ${place.rating} stars if relevant. Keep it concise and informative.`;
+        
+        const response = await hf.textGeneration({
+          model: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
+          inputs: prompt,
+          parameters: {
+            max_new_tokens: 100,
+            temperature: 0.7,
+          }
+        });
+        
+        return response.generated_text.trim();
+      })
+    );
+    
+    // Prepare recommendations for database insertion
+    const recommendations = detailedPlaces.map((place: any, index: number) => ({
+      listing_id: listingId,
+      category,
+      name: place.name,
+      description: descriptions[index],
+      address: place.formatted_address,
+      location: place.geometry.location,
+      photo: place.photos?.[0]?.photo_reference 
+        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+        : null
+    }));
+    
+    // Insert recommendations into database
+    const { error: insertError } = await fetch(
+      `${Deno.env.get('SUPABASE_URL')}/rest/v1/listing_recommendations`,
       {
+        method: 'POST',
         headers: {
           'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
           'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
         },
+        body: JSON.stringify(recommendations)
       }
-    ).then(r => r.json())
+    ).then(r => r.json());
 
-    if (fetchError) {
-      console.error('Error fetching existing recommendations:', fetchError)
+    if (insertError) {
+      throw new Error('Failed to save recommendations');
     }
 
-    const existingNames = new Set(existingRecs?.map((r: any) => r.name.toLowerCase()))
-
-    // Filter out duplicates
-    recommendations = recommendations.filter((rec: any) => 
-      !existingNames.has(rec.name.toLowerCase())
-    )
-
-    // Enrich with Google Places data
-    const enrichedRecommendations = await Promise.all(
-      recommendations.slice(0, 5).map(async (rec: any) => {
-        console.log('Enriching recommendation:', rec.name)
-        
-        try {
-          const placeResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
-              rec.name + ' near ' + address
-            )}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
-          )
-          const placeData = await placeResponse.json()
-          
-          if (placeData.results && placeData.results[0]) {
-            const place = placeData.results[0]
-            console.log('Found place:', place.name, 'at address:', place.formatted_address)
-            
-            // Only use the recommendation if we found a valid place
-            if (place.formatted_address && place.geometry?.location) {
-              return {
-                ...rec,
-                address: place.formatted_address,
-                location: place.geometry.location,
-                photo: place.photos?.[0]?.photo_reference 
-                  ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
-                  : null
-              }
-            }
-          }
-          // Skip this recommendation if we couldn't find a valid place
-          return null
-        } catch (error) {
-          console.error('Error enriching recommendation:', error)
-          return null
-        }
-      })
-    )
-
-    // Filter out null results and take only valid recommendations
-    const validRecommendations = enrichedRecommendations.filter(rec => rec !== null)
-
-    console.log('Returning enriched recommendations:', validRecommendations)
-
     return new Response(
-      JSON.stringify({ recommendations: validRecommendations }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {

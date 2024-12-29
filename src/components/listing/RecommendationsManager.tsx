@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Compass, Wand2 } from "lucide-react";
+import { Compass } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Accordion } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import CategorySection from "./recommendations/CategorySection";
 import type { Recommendation } from "./recommendations/types";
 
@@ -24,7 +23,6 @@ interface RecommendationsManagerProps {
 
 const RecommendationsManager = ({ listingId, address }: RecommendationsManagerProps) => {
   const queryClient = useQueryClient();
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // Fetch saved recommendations
   const { data: savedRecommendations, isLoading: isSavedLoading } = useQuery({
@@ -44,29 +42,6 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
       }));
     }
   });
-
-  const handleGenerateRecommendations = async () => {
-    try {
-      setIsGenerating(true);
-      console.log('Generating recommendations for address:', address);
-      
-      const response = await fetch('/api/generate-recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listingId, address })
-      });
-
-      if (!response.ok) throw new Error('Failed to generate recommendations');
-
-      toast.success('Recommendations generated successfully');
-      queryClient.invalidateQueries({ queryKey: ['saved-recommendations', listingId] });
-    } catch (error) {
-      console.error('Error generating recommendations:', error);
-      toast.error('Failed to generate recommendations');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const removeRecommendation = async (recommendationId: string) => {
     try {
@@ -100,15 +75,6 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Compass className="h-5 w-5 text-primary" /> Local Recommendations
         </h2>
-        <Button
-          variant="outline"
-          onClick={handleGenerateRecommendations}
-          disabled={isGenerating}
-          className="flex items-center gap-2"
-        >
-          <Wand2 className="h-4 w-4" />
-          {isGenerating ? 'Generating...' : 'Generate Recommendations'}
-        </Button>
       </div>
       
       <p className="text-sm text-muted-foreground">
@@ -126,6 +92,7 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
               key={category}
               category={category}
               listingId={listingId}
+              address={address}
               recommendations={categoryRecommendations}
               onRemoveRecommendation={removeRecommendation}
               onRecommendationAdded={handleRecommendationAdded}
