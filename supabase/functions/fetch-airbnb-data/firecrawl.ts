@@ -1,4 +1,3 @@
-import { FIRECRAWL_CONFIG } from './config.ts';
 import { AirbnbData, FirecrawlResponse } from './types.ts';
 
 export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Promise<AirbnbData> {
@@ -28,7 +27,8 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'User-Agent': 'Supabase Edge Function'
       },
       body: JSON.stringify(requestBody)
     });
