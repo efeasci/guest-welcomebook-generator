@@ -6,36 +6,20 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
   try {
     const requestBody = {
       url: airbnbUrl,
-      limit: 1,
-      rules: {
-        title: {
-          selector: '[data-testid="listing-title"]',
-          type: 'text'
-        },
-        image: {
-          selector: 'meta[property="og:image"]',
-          type: 'attribute',
-          attribute: 'content'
-        },
-        checkIn: {
-          selector: '[data-testid="check-in-time"]',
-          type: 'text'
-        },
-        checkOut: {
-          selector: '[data-testid="check-out-time"]',
-          type: 'text'
-        },
-        houseRules: {
-          selector: '[data-testid="house-rules-section"] li',
-          type: 'text',
-          multiple: true
-        }
-      }
+      selectors: {
+        title: '[data-testid="listing-title"]',
+        image: 'meta[property="og:image"]',
+        checkIn: '[data-testid="check-in-time"]',
+        checkOut: '[data-testid="check-out-time"]',
+        houseRules: '[data-testid="house-rules-section"] li'
+      },
+      javascript: true,
+      wait: 2000
     };
 
     console.log('Making request to Firecrawl API with body:', JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
+    const response = await fetch('https://api.firecrawl.dev/crawl', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -61,13 +45,13 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       throw new Error(crawlResponse.error || 'Failed to crawl website');
     }
 
-    // Extract the data from the first result
-    const content = crawlResponse.data[0];
+    // Extract the data from the response
+    const content = crawlResponse.data;
     return {
-      title: content.title,
-      image_url: content.image,
-      check_in: content.checkIn || "15:00",
-      check_out: content.checkOut || "11:00",
+      title: content.title?.[0],
+      image_url: content.image?.[0],
+      check_in: content.checkIn?.[0] || "15:00",
+      check_out: content.checkOut?.[0] || "11:00",
       house_rules: Array.isArray(content.houseRules) ? content.houseRules : [],
     };
   } catch (error) {
