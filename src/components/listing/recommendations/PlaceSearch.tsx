@@ -13,57 +13,27 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
-    const initAutocomplete = async () => {
-      try {
-        const { data: { api_key }, error } = await supabase.functions.invoke('get-google-maps-key');
-        if (error) {
-          console.error('Error fetching Google Maps API key:', error);
-          return;
-        }
-
-        if (!window.google) {
-          console.log('Loading Google Maps script...');
-          const script = document.createElement('script');
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${api_key}&libraries=places`;
-          script.async = true;
-          script.defer = true;
-          document.head.appendChild(script);
-
-          script.onload = () => {
-            console.log('Google Maps script loaded');
-            return setupAutocomplete();
-          };
-        } else {
-          console.log('Google Maps already loaded');
-          return setupAutocomplete();
-        }
-      } catch (error) {
-        console.error('Error initializing Google Maps:', error);
-      }
-    };
-
     const setupAutocomplete = () => {
       if (!searchInputRef.current) return;
 
+      console.log('Setting up autocomplete...');
       const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
-        types: ['establishment', 'address'],
+        types: ['establishment'], // Only allow establishment searches
       });
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
-        console.log('Place changed event triggered:', place);
+        console.log('Place selected:', place);
 
-        if (place && place.formatted_address) {
-          console.log('Updating with formatted address:', place.formatted_address);
-          onChange(place.formatted_address);
-          onPlaceSelect(place);
-        } else if (place && place.name) {
-          console.log('Updating with place name:', place.name);
-          onChange(place.name);
+        if (place && (place.formatted_address || place.name)) {
+          const placeAddress = place.formatted_address || place.name || '';
+          console.log('Updating with place:', placeAddress);
+          onChange(placeAddress);
           onPlaceSelect(place);
         }
       });
 
+      // Handle mousedown on pac-container to prevent it from being closed
       const handleMousedown = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         if (target.closest('.pac-container')) {
@@ -72,6 +42,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         }
       };
 
+      // Handle click on pac-item
       const handleClick = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         const pacItem = target.closest('.pac-item');
@@ -113,6 +84,35 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
       };
     };
 
+    const initAutocomplete = async () => {
+      try {
+        const { data: { api_key }, error } = await supabase.functions.invoke('get-google-maps-key');
+        if (error) {
+          console.error('Error fetching Google Maps API key:', error);
+          return;
+        }
+
+        if (!window.google) {
+          console.log('Loading Google Maps script...');
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${api_key}&libraries=places`;
+          script.async = true;
+          script.defer = true;
+          document.head.appendChild(script);
+
+          script.onload = () => {
+            console.log('Google Maps script loaded');
+            setupAutocomplete();
+          };
+        } else {
+          console.log('Google Maps already loaded');
+          setupAutocomplete();
+        }
+      } catch (error) {
+        console.error('Error initializing Google Maps:', error);
+      }
+    };
+
     initAutocomplete();
 
     return () => {
@@ -120,7 +120,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         google.maps.event.clearInstanceListeners(autocomplete);
       }
     };
-  }, [onPlaceSelect, onChange]);
+  }, [onChange, onPlaceSelect]);
 
   return (
     <div className="space-y-2">
