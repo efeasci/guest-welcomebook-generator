@@ -63,69 +63,64 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         onPlaceSelect(place);
       });
 
-      // Set up click handlers for the suggestions
-      const setupClickHandlers = () => {
-        const pacContainer = document.querySelector('.pac-container');
-        if (!pacContainer || pacContainer.hasAttribute('data-click-handler')) return;
-
-        console.log('Setting up click handlers for suggestions');
-        pacContainer.setAttribute('data-click-handler', 'true');
-
-        // Prevent the input from losing focus
-        pacContainer.addEventListener('mousedown', (e) => {
+      // Enhanced click handling for suggestions in dialog
+      const handleSuggestionClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        const pacItem = target.closest('.pac-item');
+        
+        if (pacItem) {
           e.preventDefault();
           e.stopPropagation();
-        });
-
-        // Handle clicks on suggestions
-        pacContainer.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement;
-          const pacItem = target.closest('.pac-item');
           
-          if (pacItem) {
-            console.log('Suggestion clicked:', pacItem);
-            
-            // Get the main text and secondary text
-            const mainText = pacItem.querySelector('.pac-item-query')?.textContent || '';
-            const secondaryText = pacItem.textContent?.replace(mainText, '').trim() || '';
-            const fullText = `${mainText} ${secondaryText}`.trim();
-            
-            console.log('Selected text:', fullText);
+          console.log('Suggestion clicked in dialog:', pacItem);
+          
+          const mainText = pacItem.querySelector('.pac-item-query')?.textContent || '';
+          const secondaryText = pacItem.textContent?.replace(mainText, '').trim() || '';
+          const fullText = `${mainText} ${secondaryText}`.trim();
+          
+          console.log('Selected text in dialog:', fullText);
 
-            if (searchInputRef.current) {
-              // Set the input value
-              searchInputRef.current.value = fullText;
-              onChange(fullText);
+          if (searchInputRef.current) {
+            searchInputRef.current.value = fullText;
+            onChange(fullText);
 
-              // Simulate a place selection
-              setTimeout(() => {
-                google.maps.event.trigger(autocomplete, 'place_changed');
-              }, 100);
-            }
+            // Force the place selection with a small delay
+            requestAnimationFrame(() => {
+              google.maps.event.trigger(autocomplete, 'place_changed');
+            });
           }
-        });
+        }
       };
 
-      // Create an observer to watch for the pac-container
-      const observer = new MutationObserver((mutations, observer) => {
-        setupClickHandlers();
-      });
+      // Setup enhanced event delegation for dialog context
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.pac-container')) {
+          handleSuggestionClick(e);
+        }
+      }, true);
 
-      // Start observing with a wider scope
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true
-      });
+      // Prevent focus loss in dialog
+      document.addEventListener('mousedown', (e) => {
+        if ((e.target as HTMLElement).closest('.pac-container')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
 
       setAutocomplete(autocomplete);
     };
 
-    initAutocomplete();
+    // Initialize with a small delay to ensure dialog is mounted
+    const timeoutId = setTimeout(initAutocomplete, 100);
 
     return () => {
+      clearTimeout(timeoutId);
       if (autocomplete) {
         google.maps.event.clearInstanceListeners(autocomplete);
       }
+      // Clean up global event listeners
+      document.removeEventListener('click', handleSuggestionClick, true);
     };
   }, [onPlaceSelect, onChange]);
 
