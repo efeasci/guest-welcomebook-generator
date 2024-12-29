@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
-import { Wifi, Clock, MapPin, Book, DoorClosed } from "lucide-react";
+import { Wifi, Clock, MapPin, Book, DoorClosed, Navigation2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Map from "@/components/Map";
@@ -48,6 +49,10 @@ const Welcome = () => {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
+  const getDirectionsUrl = (address: string) => {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -73,8 +78,27 @@ const Welcome = () => {
             </a>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="h-64 w-full mb-6">
-              <Map address={listing.address} className="h-full" />
+            <div className="space-y-4">
+              <div className="h-64 w-full">
+                <Map address={listing.address} className="h-full" />
+              </div>
+              <div className="flex justify-center">
+                <Button
+                  variant="secondary"
+                  asChild
+                  className="w-full sm:w-auto"
+                >
+                  <a
+                    href={getDirectionsUrl(listing.address)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <Navigation2 className="h-4 w-4" />
+                    Get Directions
+                  </a>
+                </Button>
+              </div>
             </div>
 
             {listing.wifi_password && (
