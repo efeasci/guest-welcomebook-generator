@@ -1,58 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-const mockDataMap = {
-  "991672746480828061": {
-    title: "Chic 1-bed in heart of Old Trafford - Free Parking",
-    address: "Old Trafford, Manchester, United Kingdom",
-    image_url: "https://images.unsplash.com/photo-1518780664697-55e3ad937233",
-    check_in: "14:00",
-    check_out: "10:00",
-    check_in_method: "Self check-in with smart lock",
-    house_rules: [
-      "3 guests maximum",
-      "No pets",
-      "Quiet hours 23:00 - 07:00",
-      "No parties or events",
-      "No commercial photography",
-      "No smoking",
-      "Late check out fee of £30.00 per hour",
-      "Lost key fee of £30.00",
-      "Lost/damaged car permit fee of £50.00"
-    ],
-    before_you_leave: [
-      "Throw rubbish away",
-      "Turn things off",
-      "Lock up",
-      "If you have used the car permit, kindly put back the car permit into the envelope and under the mat in the kitchen drawer as found."
-    ]
-  },
-  "728831175907279019": {
-    title: "Modern Studio in City Center",
-    address: "Manchester City Center, UK",
-    image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-    check_in: "15:00",
-    check_out: "11:00",
-    check_in_method: "Keypad entry",
-    house_rules: [
-      "2 guests maximum",
-      "No smoking",
-      "No parties",
-      "Quiet hours after 10 PM",
-      "No pets allowed",
-      "Late checkout fee applies"
-    ],
-    before_you_leave: [
-      "Empty the bins",
-      "Clean dishes",
-      "Turn off all appliances",
-      "Lock up and return key to lockbox"
-    ]
-  }
 }
 
 serve(async (req) => {
@@ -65,24 +16,48 @@ serve(async (req) => {
     const { airbnbUrl } = await req.json()
     console.log('Received request to fetch Airbnb data for URL:', airbnbUrl)
 
-    // Extract room ID from URL
-    const roomId = airbnbUrl.match(/rooms\/(\d+)/)?.[1]
-    console.log('Extracted room ID:', roomId)
-
-    if (!roomId) {
-      throw new Error('Invalid Airbnb URL format')
+    const apiKey = Deno.env.get('FIRECRAWL_API_KEY')
+    if (!apiKey) {
+      throw new Error('FIRECRAWL_API_KEY not configured')
     }
 
-    // Get mock data for the specific room ID
-    const mockData = mockDataMap[roomId]
-    console.log('Found mock data for room:', mockData ? 'yes' : 'no')
+    const firecrawl = new FirecrawlApp({ apiKey })
+    console.log('Crawling Airbnb URL:', airbnbUrl)
 
-    if (!mockData) {
-      throw new Error('No data available for this Airbnb listing')
+    const crawlResponse = await firecrawl.crawlUrl(airbnbUrl, {
+      limit: 1,
+      scrapeOptions: {
+        formats: ['markdown', 'html'],
+      }
+    })
+
+    if (!crawlResponse.success) {
+      throw new Error('Failed to crawl Airbnb page')
     }
+
+    console.log('Crawl response:', crawlResponse)
+
+    // Extract data from the crawled content
+    const data = crawlResponse.data[0]
+    if (!data) {
+      throw new Error('No data found in crawl response')
+    }
+
+    // Parse the crawled content to extract relevant information
+    const extractedData = {
+      title: extractTitle(data.content),
+      image_url: extractImage(data.content),
+      check_in: extractCheckInTime(data.content),
+      check_out: extractCheckOutTime(data.content),
+      check_in_method: extractCheckInMethod(data.content),
+      house_rules: extractHouseRules(data.content),
+      before_you_leave: extractBeforeYouLeave(data.content)
+    }
+
+    console.log('Extracted data:', extractedData)
 
     return new Response(
-      JSON.stringify(mockData),
+      JSON.stringify(extractedData),
       { 
         headers: { 
           ...corsHeaders,
@@ -107,3 +82,55 @@ serve(async (req) => {
     )
   }
 })
+
+// Helper functions to extract specific data from crawled content
+function extractTitle(content: string): string {
+  // Look for title in meta tags or h1
+  const titleMatch = content.match(/<title>(.*?)<\/title>/) || 
+                    content.match(/<h1[^>]*>(.*?)<\/h1>/);
+  return titleMatch ? titleMatch[1].trim() : '';
+}
+
+function extractImage(content: string): string {
+  // Look for the first image in the main content area
+  const imageMatch = content.match(/<img[^>]+src="([^">]+)"/);
+  return imageMatch ? imageMatch[1] : '';
+}
+
+function extractCheckInTime(content: string): string {
+  // Look for check-in time pattern (e.g., "14:00")
+  const checkInMatch = content.match(/check.?in.*?(\d{1,2}:\d{2})/i);
+  return checkInMatch ? checkInMatch[1] : '';
+}
+
+function extractCheckOutTime(content: string): string {
+  // Look for check-out time pattern
+  const checkOutMatch = content.match(/check.?out.*?(\d{1,2}:\d{2})/i);
+  return checkOutMatch ? checkOutMatch[1] : '';
+}
+
+function extractCheckInMethod(content: string): string {
+  // Look for check-in method information
+  const methodMatch = content.match(/self check.?in|keypad|lockbox/i);
+  return methodMatch ? methodMatch[0] : '';
+}
+
+function extractHouseRules(content: string): string[] {
+  // Look for house rules section and extract list items
+  const rulesMatch = content.match(/house rules(.*?)(?=<\/section>|<section)/is);
+  if (!rulesMatch) return [];
+  
+  const rules = rulesMatch[1].match(/<li[^>]*>(.*?)<\/li>/g);
+  return rules ? rules.map(rule => rule.replace(/<[^>]+>/g, '').trim())
+                     .filter(rule => rule.length > 0) : [];
+}
+
+function extractBeforeYouLeave(content: string): string[] {
+  // Look for checkout instructions or "before you leave" section
+  const leaveMatch = content.match(/before you leave|checkout instructions(.*?)(?=<\/section>|<section)/is);
+  if (!leaveMatch) return [];
+  
+  const instructions = leaveMatch[1].match(/<li[^>]*>(.*?)<\/li>/g);
+  return instructions ? instructions.map(instruction => instruction.replace(/<[^>]+>/g, '').trim())
+                                  .filter(instruction => instruction.length > 0) : [];
+}
