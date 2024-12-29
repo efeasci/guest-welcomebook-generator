@@ -10,7 +10,6 @@ const categories = [
   "Places to Eat",
   "Coffee Shops",
   "Bars & Wineries",
-  "Places to See",
   "Nearest Shopping",
   "Things to Do"
 ];
