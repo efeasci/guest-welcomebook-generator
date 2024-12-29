@@ -1,33 +1,11 @@
 import { useState } from "react";
-import { Compass, Loader2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Compass } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-
-interface Recommendation {
-  id?: string;
-  name: string;
-  description: string;
-  address: string;
-  photo: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-}
-
-interface RecommendationsManagerProps {
-  listingId: string;
-  address: string;
-}
+import { Accordion } from "@/components/ui/accordion";
+import CategorySection from "./recommendations/CategorySection";
+import type { Recommendation } from "./recommendations/types";
 
 const categories = [
   "Places to Eat",
@@ -37,6 +15,11 @@ const categories = [
   "Nearest Shopping",
   "Things to Do"
 ];
+
+interface RecommendationsManagerProps {
+  listingId: string;
+  address: string;
+}
 
 const RecommendationsManager = ({ listingId, address }: RecommendationsManagerProps) => {
   const queryClient = useQueryClient();
@@ -69,37 +52,26 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
 
       if (error) throw error;
 
-      return data.recommendations;
+      // Save the generated recommendations automatically
+      const recommendationsToSave = data.recommendations.map((rec: Recommendation) => ({
+        ...rec,
+        listing_id: listingId,
+        category
+      }));
+
+      const { error: saveError } = await supabase
+        .from('listing_recommendations')
+        .insert(recommendationsToSave);
+
+      if (saveError) throw saveError;
+
+      queryClient.invalidateQueries({ queryKey: ['saved-recommendations', listingId] });
+      toast.success('New recommendations generated and saved');
     } catch (err) {
       console.error('Error generating recommendations:', err);
       toast.error('Failed to generate recommendations. Please try again.');
-      return [];
     } finally {
       setLoading(prev => ({ ...prev, [category]: false }));
-    }
-  };
-
-  const saveRecommendation = async (recommendation: Recommendation, category: string) => {
-    try {
-      const { error } = await supabase
-        .from('listing_recommendations')
-        .insert({
-          listing_id: listingId,
-          category,
-          name: recommendation.name,
-          description: recommendation.description,
-          address: recommendation.address,
-          photo: recommendation.photo,
-          location: recommendation.location
-        });
-
-      if (error) throw error;
-
-      toast.success('Recommendation saved successfully');
-      queryClient.invalidateQueries({ queryKey: ['saved-recommendations', listingId] });
-    } catch (err) {
-      console.error('Error saving recommendation:', err);
-      toast.error('Failed to save recommendation');
     }
   };
 
@@ -120,20 +92,8 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
     }
   };
 
-  const handleGenerateMore = async (category: string) => {
-    const newRecommendations = await generateRecommendations(category);
-    // The new recommendations will be shown in the UI for selection
-    console.log('Generated new recommendations:', newRecommendations);
-  };
-
-  const getGoogleMapsUrl = (location: { lat: number; lng: number }) => {
-    return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
-  };
-
   if (isSavedLoading) {
-    return <div className="flex items-center justify-center p-4">
-      <Loader2 className="h-6 w-6 animate-spin" />
-    </div>;
+    return <div className="flex items-center justify-center p-4">Loading...</div>;
   }
 
   return (
@@ -153,79 +113,14 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
           ) || [];
 
           return (
-            <AccordionItem key={category} value={category} className="border rounded-lg">
-              <AccordionTrigger className="px-4">
-                <span className="flex items-center gap-2">
-                  {category}
-                  {loading[category] && (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  )}
-                  <span className="text-sm text-muted-foreground">
-                    ({categoryRecommendations.length} selected)
-                  </span>
-                </span>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="px-4 py-2 space-y-4">
-                  {/* Selected recommendations */}
-                  {categoryRecommendations.length > 0 && (
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Selected Recommendations</h3>
-                      {categoryRecommendations.map((rec) => (
-                        <Card key={rec.id} className="overflow-hidden">
-                          {rec.photo && (
-                            <img
-                              src={rec.photo}
-                              alt={rec.name}
-                              className="w-full h-48 object-cover"
-                            />
-                          )}
-                          <CardContent className="p-4 space-y-2">
-                            <h3 className="font-semibold">{rec.name}</h3>
-                            <p className="text-sm text-muted-foreground">{rec.description}</p>
-                            <p className="text-sm">{rec.address}</p>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                className="flex-1"
-                                asChild
-                              >
-                                <a
-                                  href={getGoogleMapsUrl(rec.location)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  View on Maps
-                                </a>
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => removeRecommendation(rec.id!)}
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Generate more button */}
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleGenerateMore(category)}
-                    disabled={loading[category]}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Generate More Recommendations
-                  </Button>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+            <CategorySection
+              key={category}
+              category={category}
+              recommendations={categoryRecommendations}
+              loading={loading[category] || false}
+              onGenerateMore={generateRecommendations}
+              onRemoveRecommendation={removeRecommendation}
+            />
           );
         })}
       </Accordion>

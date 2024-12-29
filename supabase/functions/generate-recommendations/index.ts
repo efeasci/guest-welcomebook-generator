@@ -15,7 +15,9 @@ serve(async (req) => {
     const { address, category } = await req.json()
     const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'))
 
-    const prompt = `Generate 5 specific recommendations for ${category} near ${address}. Format the response as a JSON array with objects containing 'name' and 'description' properties. Keep descriptions concise and informative.`
+    const prompt = `Generate exactly 5 specific recommendations for ${category} near ${address}. Format the response as a JSON array with objects containing 'name' and 'description' properties. Keep descriptions concise and informative.`
+
+    console.log('Generating recommendations with prompt:', prompt)
 
     const response = await hf.textGeneration({
       model: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
@@ -32,6 +34,7 @@ serve(async (req) => {
       const jsonStr = response.generated_text.match(/\[.*\]/s)?.[0]
       if (jsonStr) {
         recommendations = JSON.parse(jsonStr)
+        console.log('Parsed recommendations:', recommendations)
       }
     } catch (e) {
       console.error('Error parsing recommendations:', e)
@@ -39,7 +42,9 @@ serve(async (req) => {
 
     // Get place details and photos using Google Places API
     const enrichedRecommendations = await Promise.all(
-      recommendations.map(async (rec: any) => {
+      recommendations.slice(0, 5).map(async (rec: any) => {
+        console.log('Enriching recommendation:', rec.name)
+        
         const placeResponse = await fetch(
           `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
             rec.name + ' near ' + address
@@ -61,6 +66,8 @@ serve(async (req) => {
         return rec
       })
     )
+
+    console.log('Returning enriched recommendations:', enrichedRecommendations)
 
     return new Response(
       JSON.stringify({ recommendations: enrichedRecommendations }),
