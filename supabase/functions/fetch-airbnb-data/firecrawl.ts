@@ -4,9 +4,6 @@ import { AirbnbData, FirecrawlResponse } from './types.ts';
 export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Promise<AirbnbData> {
   console.log('Starting Firecrawl request for URL:', airbnbUrl);
   
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
   try {
     const requestBody = {
       url: airbnbUrl,
@@ -35,8 +32,6 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       },
       body: JSON.stringify(requestBody)
     });
-
-    clearTimeout(timeoutId);
 
     console.log('Firecrawl API response status:', response.status);
     
