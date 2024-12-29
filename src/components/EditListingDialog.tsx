@@ -24,7 +24,6 @@ interface EditListingDialogProps {
     check_in: string;
     check_out: string;
     house_rules: string[] | null;
-    airbnb_link?: string | null;
     image_url?: string | null;
     check_in_method?: string | null;
     check_in_instructions?: string | null;
