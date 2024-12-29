@@ -52,6 +52,18 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleAirbnbSync = (data: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      title: data.title || prev.title,
+      address: data.address || prev.address,
+      image_url: data.image_url || prev.image_url,
+      check_in: data.check_in || prev.check_in,
+      check_out: data.check_out || prev.check_out,
+      house_rules: data.house_rules?.join("\n") || prev.house_rules,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Submitting edit form:", formData);
@@ -86,7 +98,11 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
           <DialogTitle>Edit Listing</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <ListingBasicFields formData={formData} onChange={handleFieldChange} />
+          <ListingBasicFields 
+            formData={formData} 
+            onChange={handleFieldChange} 
+            onAirbnbSync={handleAirbnbSync}
+          />
           <ListingCheckInFields formData={formData} onChange={handleFieldChange} />
           <ListingRulesFields formData={formData} onChange={handleFieldChange} />
           <DialogFooter>
