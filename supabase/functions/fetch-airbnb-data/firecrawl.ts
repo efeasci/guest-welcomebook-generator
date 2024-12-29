@@ -6,14 +6,27 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
   const timeoutId = setTimeout(() => controller.abort(), FIRECRAWL_CONFIG.TIMEOUT);
 
   try {
-    // Log the request configuration
-    console.log('Firecrawl API request configuration:', {
+    // Log detailed request information
+    console.log('Firecrawl API request:', {
       url: FIRECRAWL_CONFIG.API_URL,
+      method: 'POST',
       airbnbUrl,
       hasApiKey: !!apiKey,
-      timeout: FIRECRAWL_CONFIG.TIMEOUT,
-      selectors: FIRECRAWL_CONFIG.SELECTORS
+      timeout: FIRECRAWL_CONFIG.TIMEOUT
     });
+
+    const requestBody = {
+      url: airbnbUrl,
+      limit: 1,
+      wait: true,
+      javascript: true,
+      scrapeOptions: {
+        formats: ['markdown', 'html'],
+        selectors: FIRECRAWL_CONFIG.SELECTORS
+      }
+    };
+
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
     
     const response = await fetch(FIRECRAWL_CONFIG.API_URL, {
       method: 'POST',
@@ -22,26 +35,18 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
         'Authorization': `Bearer ${apiKey}`,
         'Accept': 'application/json'
       },
-      body: JSON.stringify({
-        url: airbnbUrl,
-        limit: 1,
-        wait: true,
-        javascript: true,
-        scrapeOptions: {
-          formats: ['markdown', 'html'],
-          selectors: FIRECRAWL_CONFIG.SELECTORS
-        }
-      }),
+      body: JSON.stringify(requestBody),
       signal: controller.signal
     });
 
     clearTimeout(timeoutId);
 
-    // Log the response status
-    console.log('Firecrawl API response status:', {
+    // Log response details
+    console.log('Firecrawl API response:', {
       status: response.status,
       statusText: response.statusText,
-      ok: response.ok
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries())
     });
 
     if (!response.ok) {
