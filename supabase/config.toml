@@ -1,1 +1,4 @@
 project_id = "erfmwrjrkcgachhlvxwn"
+
+[functions.fetch-airbnb-data]
+verify_jwt = false
