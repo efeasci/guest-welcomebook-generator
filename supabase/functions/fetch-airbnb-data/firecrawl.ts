@@ -6,18 +6,16 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
   try {
     const requestBody = {
       url: airbnbUrl,
-      options: {
-        limit: 1,
-        wait: true,
-        javascript: true,
-        selectors: [
-          { selector: '[data-testid="listing-title"]', name: 'title' },
-          { selector: 'meta[property="og:image"]', name: 'image', attribute: 'content' },
-          { selector: '[data-testid="check-in-time"]', name: 'checkIn' },
-          { selector: '[data-testid="check-out-time"]', name: 'checkOut' },
-          { selector: '[data-testid="house-rules-section"] li', name: 'houseRules' }
-        ]
-      }
+      limit: 1,
+      wait: true,
+      javascript: true,
+      selectors: [
+        { selector: '[data-testid="listing-title"]', name: 'title' },
+        { selector: 'meta[property="og:image"]', name: 'image', attribute: 'content' },
+        { selector: '[data-testid="check-in-time"]', name: 'checkIn' },
+        { selector: '[data-testid="check-out-time"]', name: 'checkOut' },
+        { selector: '[data-testid="house-rules-section"] li', name: 'houseRules' }
+      ]
     };
 
     console.log('Making request to Firecrawl API with body:', JSON.stringify(requestBody, null, 2));
