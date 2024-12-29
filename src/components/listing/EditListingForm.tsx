@@ -37,6 +37,7 @@ interface EditListingFormProps {
 const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialData);
+  const [newListingId, setNewListingId] = useState<string | null>(null);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -88,6 +89,10 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
       toast.success(id ? "Listing updated successfully" : "Listing created successfully");
       
       if (data) {
+        // If this is a new listing, store its ID for the recommendations section
+        if (!id) {
+          setNewListingId(data.id);
+        }
         navigate(id ? "/" : `/welcome/${data.id}`);
       }
     } catch (error) {
@@ -96,10 +101,13 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
     }
   };
 
+  // Use either the existing ID or the newly created ID for recommendations
+  const currentListingId = id || newListingId;
+
   return (
     <div className="space-y-8">
       <ImageUploadSection
-        id={id}
+        id={currentListingId}
         imageUrl={formData.image_url}
         onImageUpload={(url) => handleChange("image_url", url)}
       />
@@ -129,9 +137,9 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
         onChange={handleChange}
       />
 
-      {id && (
+      {currentListingId && (
         <RecommendationsManager
-          listingId={id}
+          listingId={currentListingId}
           address={formData.address}
         />
       )}
