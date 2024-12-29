@@ -13,7 +13,6 @@ interface EditListingFormProps {
   initialData: {
     title: string;
     address: string;
-    airbnb_link: string;
     wifi_password: string;
     check_in: string;
     check_out: string;
@@ -65,23 +64,6 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
       setFormData(prev => ({ ...prev, [field]: arrayValue }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
-    }
-  };
-
-  const handleAirbnbSync = async (data: any) => {
-    try {
-      setFormData(prev => ({ 
-        ...prev, 
-        ...data,
-        image_url: data.image_url || prev.image_url,
-        house_rules: Array.isArray(data.house_rules) ? data.house_rules : [],
-        before_you_leave: Array.isArray(data.before_you_leave) ? data.before_you_leave : [],
-      }));
-      
-      toast.success("Listing updated with Airbnb data");
-    } catch (error) {
-      console.error("Error updating listing with Airbnb data:", error);
-      toast.error("Failed to update listing with Airbnb data");
     }
   };
 
@@ -167,7 +149,6 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
       <ListingBasicFields
         formData={formData}
         onChange={handleChange}
-        onAirbnbSync={handleAirbnbSync}
       />
       
       <ListingCheckInFields
