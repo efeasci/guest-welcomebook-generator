@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,20 +20,27 @@ serve(async (req) => {
       throw new Error('FIRECRAWL_API_KEY not configured')
     }
 
-    const firecrawl = new FirecrawlApp({ apiKey })
-    console.log('Crawling Airbnb URL:', airbnbUrl)
-
-    const crawlResponse = await firecrawl.crawlUrl(airbnbUrl, {
-      limit: 1,
-      scrapeOptions: {
-        formats: ['markdown', 'html'],
-      }
+    // Make request to Firecrawl API using fetch
+    const response = await fetch('https://api.firecrawl.co/crawl', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        url: airbnbUrl,
+        limit: 1,
+        scrapeOptions: {
+          formats: ['markdown', 'html']
+        }
+      })
     })
 
-    if (!crawlResponse.success) {
-      throw new Error('Failed to crawl Airbnb page')
+    if (!response.ok) {
+      throw new Error(`Firecrawl API error: ${response.statusText}`)
     }
 
+    const crawlResponse = await response.json()
     console.log('Crawl response:', crawlResponse)
 
     const content = crawlResponse.data[0]?.content || ''
