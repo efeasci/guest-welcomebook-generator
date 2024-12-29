@@ -60,6 +60,11 @@ const RecommendationsManager = ({ listingId }: RecommendationsManagerProps) => {
     }
   };
 
+  // Updated to return a Promise
+  const handleGenerateMore = async (category: string): Promise<void> => {
+    return Promise.resolve();
+  };
+
   if (isSavedLoading) {
     return <div className="flex items-center justify-center p-4">Loading...</div>;
   }
@@ -85,7 +90,7 @@ const RecommendationsManager = ({ listingId }: RecommendationsManagerProps) => {
               category={category}
               recommendations={categoryRecommendations}
               loading={loading[category] || false}
-              onGenerateMore={() => {}}
+              onGenerateMore={handleGenerateMore}
               onRemoveRecommendation={removeRecommendation}
             />
           );
