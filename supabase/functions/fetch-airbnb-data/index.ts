@@ -31,7 +31,7 @@ serve(async (req) => {
 
     console.log('Starting Firecrawl API request with valid configuration');
     const data = await fetchFromFirecrawl(airbnbUrl, apiKey);
-    console.log('Successfully fetched and processed Airbnb data');
+    console.log('Successfully fetched and processed Airbnb data:', data);
     
     return new Response(
       JSON.stringify(data),
@@ -46,7 +46,10 @@ serve(async (req) => {
     console.error('Error in fetch-airbnb-data function:', error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error instanceof Error ? error.stack : undefined
+      }),
       { 
         headers: { 
           ...corsHeaders,

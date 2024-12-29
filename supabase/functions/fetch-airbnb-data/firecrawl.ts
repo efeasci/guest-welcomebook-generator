@@ -4,29 +4,39 @@ import { AirbnbData, FirecrawlResponse } from './types.ts';
 export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Promise<AirbnbData> {
   console.log('Starting Firecrawl request for URL:', airbnbUrl);
   
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
   try {
+    const requestBody = {
+      url: airbnbUrl,
+      limit: 1,
+      wait: true,
+      javascript: true,
+      scrapeOptions: {
+        selectors: [
+          { selector: '[data-testid="listing-title"]', name: 'title' },
+          { selector: 'meta[property="og:image"]', name: 'image', attribute: 'content' },
+          { selector: '[data-testid="check-in-time"]', name: 'checkIn' },
+          { selector: '[data-testid="check-out-time"]', name: 'checkOut' },
+          { selector: '[data-testid="house-rules-section"] li', name: 'houseRules' }
+        ]
+      }
+    };
+
+    console.log('Making request to Firecrawl API with body:', JSON.stringify(requestBody, null, 2));
+
     const response = await fetch('https://api.firecrawl.co/api/v1/crawl', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        url: airbnbUrl,
-        limit: 1,
-        wait: true,
-        javascript: true,
-        scrapeOptions: {
-          selectors: [
-            { selector: '[data-testid="listing-title"]', name: 'title' },
-            { selector: 'meta[property="og:image"]', name: 'image', attribute: 'content' },
-            { selector: '[data-testid="check-in-time"]', name: 'checkIn' },
-            { selector: '[data-testid="check-out-time"]', name: 'checkOut' },
-            { selector: '[data-testid="house-rules-section"] li', name: 'houseRules' }
-          ]
-        }
-      })
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     console.log('Firecrawl API response status:', response.status);
     
