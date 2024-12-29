@@ -18,15 +18,28 @@ serve(async (req) => {
     // For now, return mock data since we can't scrape Airbnb directly
     // In a production environment, you would implement proper Airbnb data fetching
     const mockData = {
-      title: "Sample Airbnb Listing",
-      address: "123 Sample Street, City",
+      title: "Chic 1-bed in heart of Old Trafford - Free Parking",
+      address: "Old Trafford, Manchester, United Kingdom",
       image_url: "https://images.unsplash.com/photo-1518780664697-55e3ad937233",
-      check_in: "15:00",
-      check_out: "11:00",
+      check_in: "14:00",
+      check_out: "10:00",
+      check_in_method: "Self check-in with smart lock",
       house_rules: [
+        "3 guests maximum",
+        "No pets",
+        "Quiet hours 23:00 - 07:00",
+        "No parties or events",
+        "No commercial photography",
         "No smoking",
-        "No parties",
-        "Quiet hours after 10 PM"
+        "Late check out fee of £30.00 per hour",
+        "Lost key fee of £30.00",
+        "Lost/damaged car permit fee of £50.00"
+      ],
+      before_you_leave: [
+        "Throw rubbish away",
+        "Turn things off",
+        "Lock up",
+        "If you have used the car permit, kindly put back the car permit into the envelope and under the mat in the kitchen drawer as found."
       ]
     }
 

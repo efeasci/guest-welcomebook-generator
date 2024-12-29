@@ -113,6 +113,7 @@ export default function EditListing() {
         ...data,
         image_url: data.image_url || formData.image_url,
         house_rules: Array.isArray(data.house_rules) ? data.house_rules : [],
+        before_you_leave: Array.isArray(data.before_you_leave) ? data.before_you_leave : [],
       };
 
       const { error: updateError } = await supabase
