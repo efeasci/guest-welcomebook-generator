@@ -68,11 +68,7 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route
                 path="/welcome/:id"
-                element={
-                  <ProtectedRoute>
-                    <Welcome />
-                  </ProtectedRoute>
-                }
+                element={<Welcome />}
               />
             </Routes>
           </BrowserRouter>
