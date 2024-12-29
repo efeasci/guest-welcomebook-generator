@@ -57,31 +57,32 @@ export const useListingForm = (initialData: ListingFormData, id?: string) => {
 
       console.log("Prepared listing data:", listingData);
 
-      const { data, error } = id
-        ? await supabase
-            .from("listings")
-            .update(listingData)
-            .eq("id", id)
-            .select()
-            .single()
-        : await supabase
-            .from("listings")
-            .insert(listingData)
-            .select()
-            .single();
+      if (id) {
+        // Update existing listing
+        const { error } = await supabase
+          .from("listings")
+          .update(listingData)
+          .eq("id", id);
 
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
-      }
+        if (error) throw error;
+        
+        toast.success("Listing updated successfully");
+        navigate("/");
+      } else {
+        // Create new listing
+        const { data, error } = await supabase
+          .from("listings")
+          .insert(listingData)
+          .select()
+          .single();
 
-      toast.success(id ? "Listing updated successfully" : "Listing created successfully");
-      
-      if (data) {
-        if (!id) {
+        if (error) throw error;
+        
+        if (data) {
+          console.log("New listing created:", data);
           setNewListingId(data.id);
+          toast.success("Listing created successfully");
         }
-        navigate(id ? "/" : `/welcome/${data.id}`);
       }
     } catch (error) {
       console.error("Error saving listing:", error);
