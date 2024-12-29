@@ -13,10 +13,16 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
+    let clickHandler: ((e: MouseEvent) => void) | null = null;
+    let mouseDownHandler: ((e: MouseEvent) => void) | null = null;
+
     const initAutocomplete = async () => {
       try {
         const { data: { api_key }, error } = await supabase.functions.invoke('get-google-maps-key');
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching Google Maps API key:', error);
+          return;
+        }
 
         if (!window.google) {
           console.log('Loading Google Maps script...');
@@ -28,18 +34,18 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
 
           script.onload = () => {
             console.log('Google Maps script loaded');
-            initPlacesAutocomplete();
+            setupAutocomplete();
           };
         } else {
           console.log('Google Maps already loaded');
-          initPlacesAutocomplete();
+          setupAutocomplete();
         }
       } catch (error) {
         console.error('Error initializing Google Maps:', error);
       }
     };
 
-    const initPlacesAutocomplete = () => {
+    const setupAutocomplete = () => {
       if (!searchInputRef.current) return;
 
       const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
@@ -63,8 +69,8 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         onPlaceSelect(place);
       });
 
-      // Enhanced click handling for suggestions in dialog
-      const handleSuggestionClick = (e: MouseEvent) => {
+      // Handle suggestion clicks in dialog context
+      clickHandler = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         const pacItem = target.closest('.pac-item');
         
@@ -84,7 +90,6 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
             searchInputRef.current.value = fullText;
             onChange(fullText);
 
-            // Force the place selection with a small delay
             requestAnimationFrame(() => {
               google.maps.event.trigger(autocomplete, 'place_changed');
             });
@@ -92,21 +97,17 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         }
       };
 
-      // Setup enhanced event delegation for dialog context
-      document.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.closest('.pac-container')) {
-          handleSuggestionClick(e);
-        }
-      }, true);
-
       // Prevent focus loss in dialog
-      document.addEventListener('mousedown', (e) => {
+      mouseDownHandler = (e: MouseEvent) => {
         if ((e.target as HTMLElement).closest('.pac-container')) {
           e.preventDefault();
           e.stopPropagation();
         }
-      }, true);
+      };
+
+      // Setup event listeners
+      document.addEventListener('click', clickHandler, true);
+      document.addEventListener('mousedown', mouseDownHandler, true);
 
       setAutocomplete(autocomplete);
     };
@@ -119,8 +120,13 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
       if (autocomplete) {
         google.maps.event.clearInstanceListeners(autocomplete);
       }
-      // Clean up global event listeners
-      document.removeEventListener('click', handleSuggestionClick, true);
+      // Clean up event listeners
+      if (clickHandler) {
+        document.removeEventListener('click', clickHandler, true);
+      }
+      if (mouseDownHandler) {
+        document.removeEventListener('mousedown', mouseDownHandler, true);
+      }
     };
   }, [onPlaceSelect, onChange]);
 
