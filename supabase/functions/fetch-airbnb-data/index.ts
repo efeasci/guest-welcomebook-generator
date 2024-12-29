@@ -23,7 +23,7 @@ serve(async (req) => {
       throw new Error('FIRECRAWL_API_KEY not configured')
     }
 
-    // Make request to Firecrawl API using fetch with the correct endpoint
+    // Make request to Firecrawl API using fetch with proper error handling
     console.log('Making request to Firecrawl API...')
     const response = await fetch('https://api.firecrawl.co/api/v1/crawl', {
       method: 'POST',
@@ -40,14 +40,23 @@ serve(async (req) => {
       })
     })
 
+    console.log('Firecrawl API response status:', response.status)
+    
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Firecrawl API error:', response.status, errorText)
+      console.error('Firecrawl API error response:', errorText)
       throw new Error(`Firecrawl API error: ${response.status} - ${errorText}`)
     }
 
     const crawlResponse = await response.json()
-    console.log('Crawl response received:', !!crawlResponse)
+    console.log('Crawl response received:', {
+      success: !!crawlResponse,
+      dataLength: crawlResponse?.data?.length
+    })
+
+    if (!crawlResponse.data?.[0]) {
+      throw new Error('No data received from Firecrawl API')
+    }
 
     const content = crawlResponse.data[0]?.content || ''
     
