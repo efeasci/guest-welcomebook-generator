@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles } from "lucide-react";
 
 interface RecommendationCardProps {
   id?: string;
@@ -11,6 +13,7 @@ interface RecommendationCardProps {
     lat: number;
     lng: number;
   };
+  is_generated?: boolean;
   onRemove?: (id: string) => void;
 }
 
@@ -21,6 +24,7 @@ const RecommendationCard = ({
   address,
   photo,
   location,
+  is_generated,
   onRemove,
 }: RecommendationCardProps) => {
   const getGoogleMapsUrl = (name: string, address: string) => {
@@ -37,7 +41,15 @@ const RecommendationCard = ({
         />
       )}
       <CardContent className="p-4 space-y-2">
-        <h3 className="font-semibold">{name}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-semibold">{name}</h3>
+          {is_generated && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              AI Generated
+            </Badge>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">{description}</p>
         <p className="text-sm">{address}</p>
         <div className="flex gap-2">

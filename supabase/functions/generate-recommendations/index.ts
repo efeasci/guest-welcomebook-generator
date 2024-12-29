@@ -1,12 +1,11 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 const getCategoryConfig = (category: string) => {
   switch (category) {
@@ -61,19 +60,15 @@ serve(async (req) => {
   }
 
   try {
-    const { address, category, listingId } = await req.json()
+    const { address, category, listingId } = await req.json();
     console.log('Generating recommendations for:', { address, category, listingId });
     
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          persistSession: false,
-        }
-      }
-    )
+      { auth: { persistSession: false } }
+    );
     
     const config = getCategoryConfig(category);
     
@@ -108,44 +103,39 @@ serve(async (req) => {
     
     console.log('Found top places:', topPlaces.length);
     
-    // Get more details for each place
+    // Get more details for each place including the editorial summary
     const detailedPlaces = await Promise.all(
       topPlaces.map(async (place: any) => {
         const detailsResponse = await fetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,rating,photos,geometry&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,rating,photos,geometry,editorial_summary&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
         );
         const detailsData = await detailsResponse.json();
         return detailsData.result;
       })
     );
-    
-    // Generate descriptions using AI
-    const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'))
-    const descriptions = await Promise.all(
-      detailedPlaces.map(async (place: any) => {
-        const prompt = `Write a short, engaging description for ${place.name}, which is a ${config.description} located at ${place.formatted_address}. Include its rating of ${place.rating} stars if relevant. Keep it concise and informative.`;
-        
-        const response = await hf.textGeneration({
-          model: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 100,
-            temperature: 0.7,
-          }
-        });
-        
-        return response.generated_text.trim();
-      })
-    );
+
+    // Delete only AI-generated recommendations for this category
+    const { error: deleteError } = await supabaseClient
+      .from('listing_recommendations')
+      .delete()
+      .eq('listing_id', listingId)
+      .eq('category', category)
+      .eq('is_generated', true);
+
+    if (deleteError) {
+      console.error('Error deleting existing AI recommendations:', deleteError);
+      throw new Error('Failed to delete existing AI recommendations');
+    }
     
     // Prepare recommendations for database insertion
-    const recommendations = detailedPlaces.map((place: any, index: number) => ({
+    const recommendations = detailedPlaces.map((place: any) => ({
       listing_id: listingId,
       category,
       name: place.name,
-      description: descriptions[index],
+      description: place.editorial_summary?.overview || `${place.name} - Rated ${place.rating} stars`,
       address: place.formatted_address,
       location: place.geometry.location,
+      is_generated: true,
       photo: place.photos?.[0]?.photo_reference 
         ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
         : null
@@ -172,12 +162,12 @@ serve(async (req) => {
         recommendations: savedRecommendations 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    );
   }
-})
+});
