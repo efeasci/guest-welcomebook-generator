@@ -6,7 +6,7 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
   const timeoutId = setTimeout(() => controller.abort(), FIRECRAWL_CONFIG.TIMEOUT);
 
   try {
-    console.log('Making request to Firecrawl API...');
+    console.log('Making request to Firecrawl API with URL:', airbnbUrl);
     
     const response = await fetch(FIRECRAWL_CONFIG.API_URL, {
       method: 'POST',
@@ -32,7 +32,7 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Firecrawl API error response:', {
+      console.error('Firecrawl API error:', {
         status: response.status,
         statusText: response.statusText,
         body: errorText
@@ -43,11 +43,12 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
     const crawlResponse = await response.json() as FirecrawlResponse;
     console.log('Crawl response received:', {
       success: !!crawlResponse,
-      dataLength: crawlResponse?.data?.length
+      dataLength: crawlResponse?.data?.length,
+      firstResult: crawlResponse?.data?.[0]
     });
 
-    if (!crawlResponse.data?.[0]) {
-      throw new Error('No data received from Firecrawl API');
+    if (!crawlResponse.data?.[0]?.content) {
+      throw new Error('No content received from Firecrawl API');
     }
 
     const content = crawlResponse.data[0].content;
@@ -56,11 +57,12 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       image_url: content.image?.[0],
       check_in: content.checkIn?.[0] || "15:00",
       check_out: content.checkOut?.[0] || "11:00",
-      house_rules: content.houseRules,
+      house_rules: content.houseRules || [],
       description: content.description?.[0]
     };
   } catch (error) {
-    console.error('Fetch error details:', {
+    console.error('Fetch error:', {
+      name: error.name,
       message: error.message,
       cause: error.cause,
       stack: error.stack

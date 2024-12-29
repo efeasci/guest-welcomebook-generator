@@ -30,6 +30,7 @@ serve(async (req) => {
     }
 
     const data = await fetchFromFirecrawl(airbnbUrl, apiKey);
+    console.log('Successfully fetched and processed Airbnb data');
     
     return new Response(
       JSON.stringify(data),
