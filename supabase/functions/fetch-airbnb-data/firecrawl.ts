@@ -6,15 +6,14 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
   const timeoutId = setTimeout(() => controller.abort(), FIRECRAWL_CONFIG.TIMEOUT);
 
   try {
-    // Log detailed request information
-    console.log('Firecrawl API request:', {
-      url: FIRECRAWL_CONFIG.API_URL,
-      method: 'POST',
-      airbnbUrl,
-      hasApiKey: !!apiKey,
-      timeout: FIRECRAWL_CONFIG.TIMEOUT
-    });
+    // Validate API key
+    if (!apiKey) {
+      throw new Error('FIRECRAWL_API_KEY is not configured');
+    }
 
+    // Log request details
+    console.log('Starting Firecrawl request for URL:', airbnbUrl);
+    
     const requestBody = {
       url: airbnbUrl,
       limit: 1,
@@ -26,7 +25,12 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       }
     };
 
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    console.log('Request configuration:', {
+      url: FIRECRAWL_CONFIG.API_URL,
+      method: 'POST',
+      hasApiKey: !!apiKey,
+      requestBody: JSON.stringify(requestBody, null, 2)
+    });
     
     const response = await fetch(FIRECRAWL_CONFIG.API_URL, {
       method: 'POST',
@@ -51,7 +55,7 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Firecrawl API error:', {
+      console.error('Firecrawl API error response:', {
         status: response.status,
         statusText: response.statusText,
         body: errorText
@@ -60,7 +64,8 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
     }
 
     const crawlResponse = await response.json() as FirecrawlResponse;
-    console.log('Crawl response received:', {
+    
+    console.log('Crawl response data:', {
       success: !!crawlResponse,
       dataLength: crawlResponse?.data?.length,
       firstResult: crawlResponse?.data?.[0]
@@ -80,7 +85,6 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       description: content.description?.[0]
     };
   } catch (error) {
-    // Enhanced error logging
     console.error('Firecrawl API request failed:', {
       name: error.name,
       message: error.message,
