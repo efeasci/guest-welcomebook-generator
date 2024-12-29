@@ -14,6 +14,10 @@ serve(async (req) => {
     const { airbnbUrl } = await req.json()
     console.log('Received request to fetch Airbnb data for URL:', airbnbUrl)
 
+    if (!airbnbUrl) {
+      throw new Error('No Airbnb URL provided')
+    }
+
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY')
     console.log('API Key present:', !!apiKey)
 
@@ -34,14 +38,17 @@ serve(async (req) => {
         body: JSON.stringify({
           url: airbnbUrl,
           limit: 1,
+          wait: true, // Wait for the crawl to complete
+          javascript: true, // Enable JavaScript rendering
           scrapeOptions: {
             formats: ['markdown', 'html'],
             selectors: [
-              { name: 'title', selector: 'h1' },
+              { name: 'title', selector: '[data-testid="listing-title"]' },
               { name: 'image', selector: 'meta[property="og:image"]', attribute: 'content' },
-              { name: 'checkIn', selector: '.check-in-time' },
-              { name: 'checkOut', selector: '.check-out-time' },
-              { name: 'houseRules', selector: '.house-rules li' },
+              { name: 'checkIn', selector: '[data-testid="check-in-time"]' },
+              { name: 'checkOut', selector: '[data-testid="check-out-time"]' },
+              { name: 'houseRules', selector: '[data-testid="house-rules-section"] li' },
+              { name: 'description', selector: '[data-testid="listing-description"]' }
             ]
           }
         })
@@ -71,6 +78,7 @@ serve(async (req) => {
       }
 
       const content = crawlResponse.data[0]?.content || ''
+      console.log('Extracted content:', content.substring(0, 200)) // Log first 200 chars for debugging
       
       // Extract data from the crawled content
       const extractedData = {
