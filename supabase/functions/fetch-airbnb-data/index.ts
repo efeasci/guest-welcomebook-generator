@@ -22,7 +22,6 @@ serve(async (req) => {
       throw new Error('FIRECRAWL_API_KEY not configured')
     }
 
-    // Make request to Firecrawl API
     console.log('Making request to Firecrawl API...')
     
     try {
@@ -36,7 +35,14 @@ serve(async (req) => {
           url: airbnbUrl,
           limit: 1,
           scrapeOptions: {
-            formats: ['markdown', 'html']
+            formats: ['markdown', 'html'],
+            selectors: [
+              { name: 'title', selector: 'h1' },
+              { name: 'image', selector: 'meta[property="og:image"]', attribute: 'content' },
+              { name: 'checkIn', selector: '.check-in-time' },
+              { name: 'checkOut', selector: '.check-out-time' },
+              { name: 'houseRules', selector: '.house-rules li' },
+            ]
           }
         })
       })
@@ -70,8 +76,8 @@ serve(async (req) => {
       const extractedData = {
         title: extractTitle(content),
         image_url: extractImage(content),
-        check_in: extractCheckInTime(content),
-        check_out: extractCheckOutTime(content),
+        check_in: extractCheckInTime(content) || "15:00",  // Default check-in time
+        check_out: extractCheckOutTime(content) || "11:00", // Default check-out time
         check_in_method: extractCheckInMethod(content),
         house_rules: extractHouseRules(content),
         before_you_leave: extractBeforeYouLeave(content)
