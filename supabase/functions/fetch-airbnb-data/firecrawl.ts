@@ -6,10 +6,10 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
   try {
     const requestBody = {
       url: airbnbUrl,
-      limit: 1,
-      wait: true,
-      javascript: true,
-      scrapeOptions: {
+      options: {
+        limit: 1,
+        wait: true,
+        javascript: true,
         selectors: [
           { selector: '[data-testid="listing-title"]', name: 'title' },
           { selector: 'meta[property="og:image"]', name: 'image', attribute: 'content' },
@@ -22,7 +22,7 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
 
     console.log('Making request to Firecrawl API with body:', JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch('https://api.firecrawl.dev/crawl', {
+    const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
