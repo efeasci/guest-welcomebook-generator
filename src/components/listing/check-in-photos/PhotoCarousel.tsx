@@ -93,8 +93,8 @@ const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarou
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious className="absolute -left-12 lg:-left-16 bg-primary hover:bg-primary/80 text-white" />
-      <CarouselNext className="absolute -right-12 lg:-right-16 bg-primary hover:bg-primary/80 text-white" />
+      <CarouselPrevious className="absolute -left-12 lg:-left-16 bg-black/50 hover:bg-black/70 text-white !flex" />
+      <CarouselNext className="absolute -right-12 lg:-right-16 bg-black/50 hover:bg-black/70 text-white !flex" />
     </Carousel>
   );
 };
