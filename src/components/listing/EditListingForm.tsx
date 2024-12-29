@@ -1,8 +1,4 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import ListingBasicFields from "./ListingBasicFields";
 import ListingCheckInFields from "./ListingCheckInFields";
 import ListingWifiFields from "./ListingWifiFields";
@@ -10,6 +6,8 @@ import ListingRulesFields from "./ListingRulesFields";
 import ListingHostFields from "./ListingHostFields";
 import ImageUploadSection from "./ImageUploadSection";
 import RecommendationsManager from "./RecommendationsManager";
+import { useListingForm } from "./useListingForm";
+import { useNavigate } from "react-router-dom";
 
 interface EditListingFormProps {
   id?: string;
@@ -36,73 +34,7 @@ interface EditListingFormProps {
 
 const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState(initialData);
-  const [newListingId, setNewListingId] = useState<string | null>(null);
-
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      console.log("Submitting form data:", formData);
-      
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!user) throw new Error("No user found");
-
-      const listingData = {
-        ...formData,
-        user_id: user.id,
-        house_rules: Array.isArray(formData.house_rules) 
-          ? formData.house_rules 
-          : typeof formData.house_rules === 'string'
-            ? formData.house_rules.split('\n').filter(rule => rule.trim())
-            : [],
-        before_you_leave: Array.isArray(formData.before_you_leave)
-          ? formData.before_you_leave
-          : typeof formData.before_you_leave === 'string'
-            ? formData.before_you_leave.split('\n').filter(instruction => instruction.trim())
-            : []
-      };
-
-      console.log("Prepared listing data:", listingData);
-
-      const { data, error } = id
-        ? await supabase
-            .from("listings")
-            .update(listingData)
-            .eq("id", id)
-            .select()
-            .single()
-        : await supabase
-            .from("listings")
-            .insert(listingData)
-            .select()
-            .single();
-
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
-      }
-
-      toast.success(id ? "Listing updated successfully" : "Listing created successfully");
-      
-      if (data) {
-        // If this is a new listing, store its ID for the recommendations section
-        if (!id) {
-          setNewListingId(data.id);
-        }
-        navigate(id ? "/" : `/welcome/${data.id}`);
-      }
-    } catch (error) {
-      console.error("Error saving listing:", error);
-      toast.error(id ? "Failed to update listing" : "Failed to create listing");
-    }
-  };
-
-  // Use either the existing ID or the newly created ID for recommendations
-  const currentListingId = id || newListingId;
+  const { formData, handleChange, handleSubmit, currentListingId } = useListingForm(id, initialData);
 
   return (
     <div className="space-y-8">
