@@ -21,7 +21,7 @@ interface RecommendationsManagerProps {
   address: string;
 }
 
-const RecommendationsManager = ({ listingId, address }: RecommendationsManagerProps) => {
+const RecommendationsManager = ({ listingId }: RecommendationsManagerProps) => {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
@@ -42,38 +42,6 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
       }));
     }
   });
-
-  const generateRecommendations = async (category: string) => {
-    setLoading(prev => ({ ...prev, [category]: true }));
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-recommendations', {
-        body: { address, category }
-      });
-
-      if (error) throw error;
-
-      // Save the generated recommendations automatically
-      const recommendationsToSave = data.recommendations.map((rec: Recommendation) => ({
-        ...rec,
-        listing_id: listingId,
-        category
-      }));
-
-      const { error: saveError } = await supabase
-        .from('listing_recommendations')
-        .insert(recommendationsToSave);
-
-      if (saveError) throw saveError;
-
-      queryClient.invalidateQueries({ queryKey: ['saved-recommendations', listingId] });
-      toast.success('New recommendations generated and saved');
-    } catch (err) {
-      console.error('Error generating recommendations:', err);
-      toast.error('Failed to generate recommendations. Please try again.');
-    } finally {
-      setLoading(prev => ({ ...prev, [category]: false }));
-    }
-  };
 
   const removeRecommendation = async (recommendationId: string) => {
     try {
@@ -102,8 +70,7 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
         <Compass className="h-5 w-5 text-primary" /> Local Recommendations
       </h2>
       <p className="text-sm text-muted-foreground">
-        Generate and select recommendations to show to your guests. You can generate more recommendations
-        if you don't find what you're looking for.
+        Add and manage recommendations to show to your guests.
       </p>
       
       <Accordion type="single" collapsible className="w-full space-y-2">
@@ -118,7 +85,7 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
               category={category}
               recommendations={categoryRecommendations}
               loading={loading[category] || false}
-              onGenerateMore={generateRecommendations}
+              onGenerateMore={() => {}}
               onRemoveRecommendation={removeRecommendation}
             />
           );
