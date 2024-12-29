@@ -64,37 +64,47 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         onPlaceSelect(place);
       });
 
-      // Make suggestions clickable
+      // Add click handlers for the suggestions
+      const addClickHandlers = () => {
+        const pacContainer = document.querySelector('.pac-container');
+        if (pacContainer && !pacContainer.hasAttribute('data-click-handler')) {
+          pacContainer.setAttribute('data-click-handler', 'true');
+          
+          // Prevent the input from losing focus when clicking suggestions
+          pacContainer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+          });
+
+          // Handle clicks on suggestions
+          pacContainer.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            const pacItem = target.closest('.pac-item');
+            if (pacItem) {
+              const placeText = Array.from(pacItem.childNodes)
+                .map(node => (node as HTMLElement).textContent || '')
+                .join(' ')
+                .trim();
+
+              if (searchInputRef.current) {
+                searchInputRef.current.value = placeText;
+                // Trigger the place_changed event
+                google.maps.event.trigger(autocomplete, 'place_changed');
+              }
+            }
+          });
+        }
+      };
+
+      // Create an observer to watch for the pac-container being added to the DOM
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.addedNodes.length) {
-            const pacContainer = document.querySelector('.pac-container');
-            if (pacContainer && !pacContainer.getAttribute('data-click-handler')) {
-              pacContainer.setAttribute('data-click-handler', 'true');
-              
-              pacContainer.addEventListener('mousedown', (e) => {
-                e.preventDefault(); // Prevent input blur
-              });
-
-              pacContainer.addEventListener('click', (e) => {
-                const target = e.target as HTMLElement;
-                const pacItem = target.closest('.pac-item');
-                if (pacItem) {
-                  // Simulate pressing enter on the selected item
-                  const input = searchInputRef.current;
-                  if (input) {
-                    const parts = pacItem.textContent?.split('') || [];
-                    input.value = parts.join('');
-                    google.maps.event.trigger(autocomplete, 'place_changed');
-                  }
-                }
-              });
-            }
+            addClickHandlers();
           }
         });
       });
 
-      // Observe DOM changes to catch when Google adds the pac-container
+      // Start observing the document body for the pac-container
       observer.observe(document.body, {
         childList: true,
         subtree: true
