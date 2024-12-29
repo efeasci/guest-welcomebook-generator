@@ -23,8 +23,8 @@ const RecommendationCard = ({
   location,
   onRemove,
 }: RecommendationCardProps) => {
-  const getGoogleMapsUrl = (location: { lat: number; lng: number }) => {
-    return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+  const getGoogleMapsUrl = (name: string, address: string) => {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " " + address)}`;
   };
 
   return (
@@ -48,7 +48,7 @@ const RecommendationCard = ({
             asChild
           >
             <a
-              href={getGoogleMapsUrl(location)}
+              href={getGoogleMapsUrl(name, address)}
               target="_blank"
               rel="noopener noreferrer"
             >
