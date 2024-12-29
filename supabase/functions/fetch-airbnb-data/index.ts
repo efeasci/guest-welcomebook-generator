@@ -3,7 +3,6 @@ import { corsHeaders } from './config.ts';
 import { fetchFromFirecrawl } from './firecrawl.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

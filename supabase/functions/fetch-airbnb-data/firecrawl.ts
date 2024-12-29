@@ -1,4 +1,4 @@
-import { AirbnbData, FirecrawlResponse } from './types.ts';
+import { AirbnbData } from './types.ts';
 
 export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Promise<AirbnbData> {
   console.log('Starting Firecrawl request for URL:', airbnbUrl);
@@ -33,8 +33,6 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       body: JSON.stringify(requestBody)
     });
 
-    console.log('Firecrawl API response status:', response.status);
-    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Firecrawl API error response:', {
@@ -45,12 +43,8 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       throw new Error(`Firecrawl API error: ${response.status} - ${errorText}`);
     }
 
-    const crawlResponse = await response.json() as FirecrawlResponse;
-    console.log('Crawl response data:', {
-      success: !!crawlResponse,
-      dataLength: crawlResponse?.data?.length,
-      firstResult: crawlResponse?.data?.[0]
-    });
+    const crawlResponse = await response.json();
+    console.log('Crawl response:', crawlResponse);
 
     if (!crawlResponse.data?.[0]?.content) {
       throw new Error('No content received from Firecrawl API');
@@ -63,17 +57,9 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       check_in: content.checkIn?.[0] || "15:00",
       check_out: content.checkOut?.[0] || "11:00",
       house_rules: content.houseRules || [],
-      description: content.description?.[0]
     };
   } catch (error) {
-    console.error('Firecrawl API request failed:', {
-      name: error.name,
-      message: error.message,
-      cause: error.cause,
-      stack: error.stack,
-      url: airbnbUrl,
-      hasApiKey: !!apiKey
-    });
+    console.error('Error in fetchFromFirecrawl:', error);
     throw error;
   }
 }
