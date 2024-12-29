@@ -18,6 +18,7 @@ export type Database = {
           check_in_method: string | null
           check_out: string
           created_at: string | null
+          directions: string | null
           house_rules: string[] | null
           id: string
           image_url: string | null
@@ -34,6 +35,7 @@ export type Database = {
           check_in_method?: string | null
           check_out: string
           created_at?: string | null
+          directions?: string | null
           house_rules?: string[] | null
           id?: string
           image_url?: string | null
@@ -50,6 +52,7 @@ export type Database = {
           check_in_method?: string | null
           check_out?: string
           created_at?: string | null
+          directions?: string | null
           house_rules?: string[] | null
           id?: string
           image_url?: string | null

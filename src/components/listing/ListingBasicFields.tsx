@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import AddressAutocomplete from "../AddressAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ interface ListingBasicFieldsProps {
     address: string;
     image_url: string;
     airbnb_link?: string;
+    directions?: string;
   };
   onChange: (field: string, value: string) => void;
 }
@@ -65,6 +67,18 @@ const ListingBasicFields = ({ formData, onChange }: ListingBasicFieldsProps) => 
         <AddressAutocomplete
           value={formData.address}
           onChange={(address) => onChange("address", address)}
+        />
+      </div>
+      <div>
+        <label htmlFor="directions" className="text-sm font-medium">
+          Directions
+        </label>
+        <Textarea
+          id="directions"
+          value={formData.directions || ""}
+          onChange={(e) => onChange("directions", e.target.value)}
+          placeholder="Enter any specific directions or instructions to find the property..."
+          className="min-h-[100px]"
         />
       </div>
       <div className="space-y-2">

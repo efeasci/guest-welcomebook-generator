@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Wifi, Clock, MapPin, Book, DoorClosed, Navigation2 } from "lucide-react";
+import { Wifi, Clock, MapPin, Book, DoorClosed, Navigation2, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -100,6 +100,17 @@ const Welcome = () => {
                 </Button>
               </div>
             </div>
+
+            {listing.directions && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <Info className="h-5 w-5 text-primary" /> Directions
+                </h2>
+                <div className="bg-secondary/50 p-4 rounded-lg">
+                  <p className="whitespace-pre-wrap">{listing.directions}</p>
+                </div>
+              </section>
+            )}
 
             {listing.wifi_password && (
               <section className="space-y-4">
