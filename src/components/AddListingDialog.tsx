@@ -1,84 +1,35 @@
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
+import { supabase } from "@/integrations/supabase/client"
+import ListingForm from "./ListingForm"
+import type { ListingFormValues } from "@/schemas/listingSchema"
+import { submitListing } from "@/utils/listingSubmission"
 
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  address: z.string().min(1, "Address is required"),
-  wifi_password: z.string().optional(),
-  check_in: z.string().min(1, "Check-in time is required"),
-  check_out: z.string().min(1, "Check-out time is required"),
-  house_rules: z.string().optional(),
-})
-
-const AddListingDialog = ({
-  open,
-  onOpenChange,
-}: {
+interface AddListingDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-}) => {
+}
+
+const AddListingDialog = ({ open, onOpenChange }: AddListingDialogProps) => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      address: "",
-      wifi_password: "",
-      check_in: "14:00",
-      check_out: "11:00",
-      house_rules: "",
-    },
-  })
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: ListingFormValues) => {
     try {
-      console.log("Submitting new listing:", values)
-      
-      // Get the current user's ID
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError) throw userError
       if (!user) throw new Error("No user found")
 
-      // Prepare the data object with all required fields
-      const listingData = {
-        title: values.title,
-        address: values.address,
-        wifi_password: values.wifi_password || null,
-        check_in: values.check_in,
-        check_out: values.check_out,
-        house_rules: values.house_rules ? values.house_rules.split('\n').filter(rule => rule.trim()) : [],
-        user_id: user.id,
-      }
-
-      const { data, error } = await supabase.from("listings").insert(listingData).select().single()
-
-      if (error) throw error
-
+      const data = await submitListing(values, user.id)
+      
       toast({
         title: "Success",
         description: "Listing created successfully",
@@ -86,9 +37,7 @@ const AddListingDialog = ({
       
       queryClient.invalidateQueries({ queryKey: ["listings"] })
       onOpenChange(false)
-      form.reset()
       
-      // Navigate to the welcome page with the new listing ID
       if (data) {
         navigate(`/welcome/${data.id}`)
       }
@@ -108,92 +57,7 @@ const AddListingDialog = ({
         <DialogHeader>
           <DialogTitle>Add New Listing</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter listing title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="wifi_password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>WiFi Password (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter WiFi password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="check_in"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Check-in Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="check_out"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Check-out Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="house_rules"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>House Rules (Optional, one per line)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter house rules, one per line"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit">Create Listing</Button>
-          </form>
-        </Form>
+        <ListingForm onSubmit={handleSubmit} />
       </DialogContent>
     </Dialog>
   )
