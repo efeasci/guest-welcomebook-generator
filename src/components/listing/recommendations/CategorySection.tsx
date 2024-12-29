@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import RecommendationCard from "./RecommendationCard";
-import AddRecommendationDialog from "./AddRecommendationDialog";
+import PlaceSearch from "./PlaceSearch";
 import type { Recommendation } from "./types";
 
 interface CategorySectionProps {
@@ -21,7 +24,59 @@ const CategorySection = ({
   onRemoveRecommendation,
   onRecommendationAdded
 }: CategorySectionProps) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
+
+  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    console.log('Selected place:', place);
+    setSelectedPlace(place);
+    if (place.name) {
+      setSearchInput(place.name);
+    }
+  };
+
+  const handleAddRecommendation = async () => {
+    if (!selectedPlace || !selectedPlace.geometry?.location) {
+      toast.error('Please select a valid place from the suggestions');
+      return;
+    }
+
+    try {
+      const location = selectedPlace.geometry.location;
+      const newRecommendation = {
+        listing_id: listingId,
+        name: selectedPlace.name || '',
+        description: description,
+        address: selectedPlace.formatted_address || '',
+        photo: selectedPlace.photos?.[0]?.getUrl(),
+        location: {
+          lat: location.lat(),
+          lng: location.lng()
+        },
+        category: category
+      };
+
+      console.log('Adding recommendation:', newRecommendation);
+
+      const { error } = await supabase
+        .from('listing_recommendations')
+        .insert([newRecommendation]);
+
+      if (error) throw error;
+
+      toast.success('Recommendation added successfully');
+      setIsAdding(false);
+      setSearchInput("");
+      setDescription("");
+      setSelectedPlace(null);
+      onRecommendationAdded?.();
+    } catch (error) {
+      console.error('Error adding recommendation:', error);
+      toast.error('Failed to add recommendation');
+    }
+  };
 
   return (
     <AccordionItem value={category} className="border rounded-lg">
@@ -48,22 +103,56 @@ const CategorySection = ({
             </div>
           )}
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Recommendation
-          </Button>
-
-          <AddRecommendationDialog
-            category={category}
-            listingId={listingId}
-            isOpen={isDialogOpen}
-            onOpenChange={setIsDialogOpen}
-            onSuccess={onRecommendationAdded}
-          />
+          {!isAdding ? (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setIsAdding(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Recommendation
+            </Button>
+          ) : (
+            <div className="space-y-4 border rounded-lg p-4">
+              <PlaceSearch
+                value={searchInput}
+                onChange={setSearchInput}
+                onPlaceSelect={handlePlaceSelect}
+              />
+              {selectedPlace && (
+                <div className="text-sm text-muted-foreground">
+                  Selected: {selectedPlace.name} ({selectedPlace.formatted_address})
+                </div>
+              )}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Add your personal recommendation..."
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsAdding(false);
+                    setSearchInput("");
+                    setDescription("");
+                    setSelectedPlace(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAddRecommendation}
+                  disabled={!selectedPlace || !description}
+                >
+                  Add Recommendation
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </AccordionContent>
     </AccordionItem>
