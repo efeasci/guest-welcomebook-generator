@@ -6,6 +6,7 @@ interface ListingCheckInFieldsProps {
     check_out: string;
     check_in_method: string;
     wifi_password: string;
+    wifi_network: string;
   };
   onChange: (field: string, value: string) => void;
 }
@@ -25,13 +26,25 @@ const ListingCheckInFields = ({ formData, onChange }: ListingCheckInFieldsProps)
         />
       </div>
       <div>
-        <label htmlFor="wifi" className="text-sm font-medium">
+        <label htmlFor="wifi_network" className="text-sm font-medium">
+          WiFi Network Name
+        </label>
+        <Input
+          id="wifi_network"
+          value={formData.wifi_network}
+          onChange={(e) => onChange("wifi_network", e.target.value)}
+          placeholder="Enter WiFi network name"
+        />
+      </div>
+      <div>
+        <label htmlFor="wifi_password" className="text-sm font-medium">
           WiFi Password
         </label>
         <Input
-          id="wifi"
+          id="wifi_password"
           value={formData.wifi_password}
           onChange={(e) => onChange("wifi_password", e.target.value)}
+          placeholder="Enter WiFi password"
         />
       </div>
       <div>

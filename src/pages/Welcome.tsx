@@ -77,6 +77,7 @@ const Welcome = () => {
               <MapPin className="h-4 w-4" /> {listing.address}
             </a>
           </CardHeader>
+
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="h-64 w-full">
@@ -117,8 +118,15 @@ const Welcome = () => {
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                   <Wifi className="h-5 w-5 text-primary" /> WiFi Information
                 </h2>
-                <div className="bg-secondary p-4 rounded-lg">
-                  <p className="font-mono text-lg">{listing.wifi_password}</p>
+                <div className="bg-secondary p-4 rounded-lg space-y-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Network Name</p>
+                    <p className="font-mono text-lg">{listing.wifi_network || "WiFi"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Password</p>
+                    <p className="font-mono text-lg">{listing.wifi_password}</p>
+                  </div>
                 </div>
               </section>
             )}
