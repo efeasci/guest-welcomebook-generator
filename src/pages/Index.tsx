@@ -8,11 +8,11 @@ import AddListingDialog from "@/components/AddListingDialog";
 import EditListingDialog from "@/components/EditListingDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Card } from "@/components/ui/card";
-import { Trash2, Image } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import ShareListingButton from "@/components/ShareListingButton";
+import Map from "@/components/Map";
 
-// Array of placeholder image IDs
 const placeholderImages = [
   'photo-1649972904349-6e44c42644a7',
   'photo-1488590528505-98d2b5aba04b',
@@ -139,15 +139,26 @@ export default function Index() {
         {listings.map((listing, index) => (
           <Card key={listing.id} className="overflow-hidden">
             <div className="w-full h-48 relative">
-              <img 
-                src={`https://source.unsplash.com/${placeholderImages[index % placeholderImages.length]}`}
-                alt={listing.title}
-                className="w-full h-full object-cover"
-              />
+              {listing.image_url ? (
+                <img 
+                  src={listing.image_url}
+                  alt={listing.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img 
+                  src={`https://source.unsplash.com/${placeholderImages[index % placeholderImages.length]}`}
+                  alt={listing.title}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-2">{listing.title}</h2>
               <p className="text-gray-600 mb-4">{listing.address}</p>
+              <div className="h-48 mb-4">
+                <Map address={listing.address} className="h-full" />
+              </div>
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm">Check-in: {listing.check_in}</p>
