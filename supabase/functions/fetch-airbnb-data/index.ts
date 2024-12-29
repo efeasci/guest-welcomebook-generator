@@ -29,6 +29,7 @@ serve(async (req) => {
       throw new Error('FIRECRAWL_API_KEY not configured');
     }
 
+    console.log('Starting Firecrawl API request with valid configuration');
     const data = await fetchFromFirecrawl(airbnbUrl, apiKey);
     console.log('Successfully fetched and processed Airbnb data');
     

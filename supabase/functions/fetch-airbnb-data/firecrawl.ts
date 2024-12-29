@@ -6,7 +6,14 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
   const timeoutId = setTimeout(() => controller.abort(), FIRECRAWL_CONFIG.TIMEOUT);
 
   try {
-    console.log('Making request to Firecrawl API with URL:', airbnbUrl);
+    // Log the request configuration
+    console.log('Firecrawl API request configuration:', {
+      url: FIRECRAWL_CONFIG.API_URL,
+      airbnbUrl,
+      hasApiKey: !!apiKey,
+      timeout: FIRECRAWL_CONFIG.TIMEOUT,
+      selectors: FIRECRAWL_CONFIG.SELECTORS
+    });
     
     const response = await fetch(FIRECRAWL_CONFIG.API_URL, {
       method: 'POST',
@@ -29,6 +36,13 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
     });
 
     clearTimeout(timeoutId);
+
+    // Log the response status
+    console.log('Firecrawl API response status:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -61,12 +75,15 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       description: content.description?.[0]
     };
   } catch (error) {
-    console.error('Fetch error:', {
+    // Enhanced error logging
+    console.error('Firecrawl API request failed:', {
       name: error.name,
       message: error.message,
       cause: error.cause,
-      stack: error.stack
+      stack: error.stack,
+      url: FIRECRAWL_CONFIG.API_URL,
+      hasApiKey: !!apiKey
     });
-    throw new Error(`Failed to fetch from Firecrawl API: ${error.message}`);
+    throw error;
   }
 }
