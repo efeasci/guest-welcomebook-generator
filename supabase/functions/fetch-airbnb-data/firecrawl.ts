@@ -22,7 +22,7 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
 
     console.log('Making request to Firecrawl API with body:', JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch('https://api.firecrawl.co/api/v1/crawl', {
+    const response = await fetch('https://api.firecrawl.dev/api/v1/crawl', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
