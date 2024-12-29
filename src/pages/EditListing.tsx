@@ -9,11 +9,24 @@ import ListingBasicFields from "@/components/listing/ListingBasicFields";
 import ListingCheckInFields from "@/components/listing/ListingCheckInFields";
 import ListingRulesFields from "@/components/listing/ListingRulesFields";
 
+interface ListingFormData {
+  title: string;
+  address: string;
+  airbnb_link: string;
+  wifi_password: string;
+  check_in: string;
+  check_out: string;
+  check_in_method: string;
+  house_rules: string[];
+  before_you_leave: string[];
+  image_url: string;
+}
+
 export default function EditListing() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ListingFormData>({
     title: "",
     address: "",
     airbnb_link: "",
@@ -21,8 +34,8 @@ export default function EditListing() {
     check_in: "",
     check_out: "",
     check_in_method: "",
-    house_rules: [] as string[],
-    before_you_leave: [] as string[],
+    house_rules: [],
+    before_you_leave: [],
     image_url: "",
   });
 
@@ -37,7 +50,11 @@ export default function EditListing() {
 
       if (error) throw error;
       if (data) {
-        setFormData(data);
+        setFormData({
+          ...data,
+          house_rules: data.house_rules || [],
+          before_you_leave: data.before_you_leave || [],
+        });
       }
       return data;
     },
@@ -81,26 +98,33 @@ export default function EditListing() {
   };
 
   const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === "house_rules" || field === "before_you_leave") {
+      // Convert newline-separated string to array
+      const arrayValue = value.split("\n").filter((item: string) => item.trim());
+      setFormData(prev => ({ ...prev, [field]: arrayValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleAirbnbSync = async (data: any) => {
     try {
-      // Update the listing with the synced data
+      const updateData = {
+        ...data,
+        image_url: data.image_url || formData.image_url,
+        house_rules: Array.isArray(data.house_rules) ? data.house_rules : [],
+      };
+
       const { error: updateError } = await supabase
         .from("listings")
-        .update({
-          ...data,
-          image_url: data.image_url || formData.image_url,
-        })
+        .update(updateData)
         .eq("id", id);
 
       if (updateError) throw updateError;
 
       setFormData(prev => ({ 
         ...prev, 
-        ...data,
-        image_url: data.image_url || prev.image_url,
+        ...updateData,
       }));
       
       toast.success("Listing updated with Airbnb data");
@@ -114,7 +138,11 @@ export default function EditListing() {
     try {
       const { error } = await supabase
         .from("listings")
-        .update(formData)
+        .update({
+          ...formData,
+          house_rules: formData.house_rules.filter(rule => rule.trim()),
+          before_you_leave: formData.before_you_leave.filter(rule => rule.trim()),
+        })
         .eq("id", id);
 
       if (error) throw error;
