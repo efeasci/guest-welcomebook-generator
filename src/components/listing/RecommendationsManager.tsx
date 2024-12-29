@@ -62,6 +62,7 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
   };
 
   const handleRecommendationAdded = () => {
+    console.log('Refreshing recommendations after add/generate');
     queryClient.invalidateQueries({ queryKey: ['saved-recommendations', listingId] });
   };
 

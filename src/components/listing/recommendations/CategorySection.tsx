@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Wand2 } from "lucide-react";
+import { Plus, Wand2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
@@ -43,8 +43,12 @@ const CategorySection = ({
 
       if (error) throw error;
 
-      toast.success(`Generated recommendations for ${category}`);
+      console.log('Generated recommendations response:', data);
+      
+      // Trigger the parent component to refresh recommendations
       onRecommendationAdded?.();
+      
+      toast.success(`Generated recommendations for ${category}`);
     } catch (error) {
       console.error('Error generating recommendations:', error);
       toast.error(`Failed to generate recommendations for ${category}`);
@@ -75,7 +79,7 @@ const CategorySection = ({
               variant="outline"
               className="flex-1"
               onClick={() => setIsAdding(true)}
-              disabled={isAdding}
+              disabled={isAdding || isGenerating}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Recommendation
@@ -86,7 +90,11 @@ const CategorySection = ({
               onClick={handleGenerateRecommendations}
               disabled={isGenerating}
             >
-              <Wand2 className="h-4 w-4 mr-2" />
+              {isGenerating ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4 mr-2" />
+              )}
               {isGenerating ? 'Generating...' : 'Generate'}
             </Button>
           </div>
