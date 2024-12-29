@@ -37,8 +37,14 @@ const RecommendationsSection = ({ listingId }: RecommendationsSectionProps) => {
         throw error;
       }
 
-      console.log('Fetched recommendations:', data);
-      return data as Recommendation[];
+      // Transform the data to ensure location is properly typed
+      const transformedData = data.map(rec => ({
+        ...rec,
+        location: rec.location as { lat: number; lng: number }
+      }));
+
+      console.log('Fetched recommendations:', transformedData);
+      return transformedData as Recommendation[];
     },
   });
 
@@ -58,6 +64,11 @@ const RecommendationsSection = ({ listingId }: RecommendationsSectionProps) => {
     return recommendations?.filter(rec => rec.category === category) || [];
   };
 
+  // Dummy onFetch function since we don't need to fetch on demand in the welcome page
+  const handleFetch = (category: string) => {
+    console.log('Category opened:', category);
+  };
+
   return (
     <section className="space-y-4">
       <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -70,6 +81,7 @@ const RecommendationsSection = ({ listingId }: RecommendationsSectionProps) => {
             category={category}
             recommendations={getRecommendationsByCategory(category)}
             loading={false}
+            onFetch={handleFetch}
           />
         ))}
       </Accordion>

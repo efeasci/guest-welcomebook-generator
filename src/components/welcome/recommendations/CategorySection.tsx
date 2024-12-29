@@ -30,8 +30,8 @@ const CategorySection = ({
       </AccordionTrigger>
       <AccordionContent>
         <div className="px-4 py-2 space-y-4">
-          {recommendations?.map((rec, index) => (
-            <RecommendationCard key={index} {...rec} />
+          {recommendations?.map((rec) => (
+            <RecommendationCard key={rec.id} {...rec} />
           ))}
         </div>
       </AccordionContent>
