@@ -20,6 +20,7 @@ const AddressAutocomplete = ({ value, onChange, className }: AddressAutocomplete
         if (error) throw error;
 
         if (!window.google) {
+          console.log('Loading Google Maps script...');
           const script = document.createElement('script');
           script.src = `https://maps.googleapis.com/maps/api/js?key=${api_key}&libraries=places`;
           script.async = true;
@@ -27,8 +28,9 @@ const AddressAutocomplete = ({ value, onChange, className }: AddressAutocomplete
           document.head.appendChild(script);
 
           script.onload = () => {
+            console.log('Google Maps script loaded');
             if (inputRef.current) {
-              const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
+              const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
                 types: ['address'],
               });
 
@@ -43,7 +45,8 @@ const AddressAutocomplete = ({ value, onChange, className }: AddressAutocomplete
             }
           };
         } else if (inputRef.current) {
-          const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
+          console.log('Google Maps already loaded');
+          const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
             types: ['address'],
           });
 
@@ -65,7 +68,7 @@ const AddressAutocomplete = ({ value, onChange, className }: AddressAutocomplete
 
     return () => {
       if (autocomplete) {
-        google.maps.event.clearInstanceListeners(autocomplete);
+        window.google.maps.event.clearInstanceListeners(autocomplete);
       }
     };
   }, [onChange]);

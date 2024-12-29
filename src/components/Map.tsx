@@ -18,14 +18,19 @@ const Map = ({ address, className = "" }: MapProps) => {
         if (error) throw error;
 
         if (!window.google) {
+          console.log('Loading Google Maps script...');
           const script = document.createElement('script');
           script.src = `https://maps.googleapis.com/maps/api/js?key=${api_key}&libraries=places`;
           script.async = true;
           script.defer = true;
           document.head.appendChild(script);
 
-          script.onload = () => createMap();
+          script.onload = () => {
+            console.log('Google Maps script loaded');
+            createMap();
+          };
         } else {
+          console.log('Google Maps already loaded');
           createMap();
         }
       } catch (error) {
@@ -37,13 +42,13 @@ const Map = ({ address, className = "" }: MapProps) => {
       if (!mapRef.current) return;
 
       // Initialize the map
-      map.current = new google.maps.Map(mapRef.current, {
+      map.current = new window.google.maps.Map(mapRef.current, {
         zoom: 15,
         center: { lat: 0, lng: 0 },
       });
 
       // Initialize the geocoder
-      const geocoder = new google.maps.Geocoder();
+      const geocoder = new window.google.maps.Geocoder();
 
       // Geocode the address
       geocoder.geocode({ address }, (results, status) => {
@@ -56,7 +61,7 @@ const Map = ({ address, className = "" }: MapProps) => {
             marker.current.setMap(null);
           }
 
-          marker.current = new google.maps.Marker({
+          marker.current = new window.google.maps.Marker({
             map: map.current,
             position: location,
           });
