@@ -14,6 +14,7 @@ interface EditListingFormProps {
     title: string;
     address: string;
     wifi_password: string;
+    wifi_network: string;
     check_in: string;
     check_out: string;
     check_in_method: string;

@@ -25,6 +25,7 @@ export type Database = {
           title: string
           updated_at: string | null
           user_id: string
+          wifi_network: string | null
           wifi_password: string | null
         }
         Insert: {
@@ -42,6 +43,7 @@ export type Database = {
           title: string
           updated_at?: string | null
           user_id: string
+          wifi_network?: string | null
           wifi_password?: string | null
         }
         Update: {
@@ -59,6 +61,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string
+          wifi_network?: string | null
           wifi_password?: string | null
         }
         Relationships: []

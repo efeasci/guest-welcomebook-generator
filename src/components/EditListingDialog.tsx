@@ -20,6 +20,7 @@ interface EditListingDialogProps {
     title: string;
     address: string;
     wifi_password: string | null;
+    wifi_network: string | null;
     check_in: string;
     check_out: string;
     house_rules: string[] | null;
@@ -39,6 +40,7 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
     title: listing.title,
     address: listing.address,
     wifi_password: listing.wifi_password || "",
+    wifi_network: listing.wifi_network || "",
     check_in: listing.check_in,
     check_out: listing.check_out,
     house_rules: listing.house_rules?.join("\n") || "",
