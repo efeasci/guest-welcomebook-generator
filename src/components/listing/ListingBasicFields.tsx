@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ListingBasicFieldsProps {
   formData: {
@@ -25,27 +26,22 @@ const ListingBasicFields = ({ formData, onChange, onAirbnbSync }: ListingBasicFi
 
     setIsSyncing(true);
     try {
-      const response = await fetch(
-        "https://erfmwrjrkcgachhlvxwn.functions.supabase.co/fetch-airbnb-data",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ airbnbUrl: formData.airbnb_link }),
-        }
-      );
+      console.log("Attempting to sync Airbnb data with URL:", formData.airbnb_link);
+      
+      const { data, error } = await supabase.functions.invoke('fetch-airbnb-data', {
+        body: { airbnbUrl: formData.airbnb_link }
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch Airbnb data");
-      }
+      console.log("Airbnb sync response:", { data, error });
 
-      const data = await response.json();
+      if (error) throw error;
+      if (!data) throw new Error("No data received from Airbnb sync");
+
       onAirbnbSync?.(data);
       toast.success("Successfully synced Airbnb listing data");
     } catch (error) {
       console.error("Error syncing Airbnb data:", error);
-      toast.error("Failed to sync Airbnb listing data");
+      toast.error("Failed to sync Airbnb listing data. Please try again.");
     } finally {
       setIsSyncing(false);
     }
