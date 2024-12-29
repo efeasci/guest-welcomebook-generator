@@ -1,29 +1,9 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Compass, Loader2 } from "lucide-react";
+import { Compass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-
-interface Recommendation {
-  name: string;
-  description: string;
-  address: string;
-  photo: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-}
-
-interface RecommendationsSectionProps {
-  address: string;
-}
+import { Accordion } from "@/components/ui/accordion";
+import CategorySection from "./recommendations/CategorySection";
+import type { Recommendation } from "./recommendations/types";
 
 const categories = [
   "Places to Eat",
@@ -33,6 +13,10 @@ const categories = [
   "Nearest Shopping",
   "Things to Do"
 ];
+
+interface RecommendationsSectionProps {
+  address: string;
+}
 
 const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
   const [recommendations, setRecommendations] = useState<Record<string, Recommendation[]>>({});
@@ -57,7 +41,6 @@ const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
           [category]: data.recommendations
         };
         
-        // Check if there are any recommendations across all categories
         const hasRecs = Object.values(newRecs).some(recs => recs && recs.length > 0);
         setHasAnyRecommendations(hasRecs);
         
@@ -72,16 +55,10 @@ const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
   };
 
   useEffect(() => {
-    // Check for any existing recommendations on mount
     const hasRecs = Object.values(recommendations).some(recs => recs && recs.length > 0);
     setHasAnyRecommendations(hasRecs);
   }, []);
 
-  const getGoogleMapsUrl = (location: { lat: number; lng: number }) => {
-    return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
-  };
-
-  // If there are no recommendations, don't render anything
   if (!hasAnyRecommendations && !Object.values(loading).some(isLoading => isLoading)) {
     return null;
   }
@@ -93,50 +70,13 @@ const RecommendationsSection = ({ address }: RecommendationsSectionProps) => {
       </h2>
       <Accordion type="single" collapsible className="w-full space-y-2">
         {categories.map((category) => (
-          <AccordionItem key={category} value={category} className="border rounded-lg">
-            <AccordionTrigger className="px-4" onClick={() => fetchRecommendations(category)}>
-              <span className="flex items-center gap-2">
-                {category}
-                {loading[category] && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                )}
-              </span>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="px-4 py-2 space-y-4">
-                {recommendations[category]?.map((rec, index) => (
-                  <Card key={index} className="overflow-hidden">
-                    {rec.photo && (
-                      <img
-                        src={rec.photo}
-                        alt={rec.name}
-                        className="w-full h-48 object-cover"
-                      />
-                    )}
-                    <CardContent className="p-4 space-y-2">
-                      <h3 className="font-semibold">{rec.name}</h3>
-                      <p className="text-sm text-muted-foreground">{rec.description}</p>
-                      <p className="text-sm">{rec.address}</p>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="w-full"
-                        asChild
-                      >
-                        <a
-                          href={getGoogleMapsUrl(rec.location)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          View on Maps
-                        </a>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+          <CategorySection
+            key={category}
+            category={category}
+            recommendations={recommendations[category] || []}
+            loading={loading[category] || false}
+            onFetch={fetchRecommendations}
+          />
         ))}
       </Accordion>
       {error && <p className="text-red-500 text-sm">{error}</p>}
