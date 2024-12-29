@@ -36,28 +36,32 @@ const CheckInPhotosSection = ({ listingId }: CheckInPhotosSectionProps) => {
       <h2 className="text-xl font-semibold flex items-center gap-2">
         <Camera className="h-5 w-5 text-primary" /> Check-in Photos
       </h2>
-      <Carousel className="w-full">
-        <CarouselContent>
-          {photos.map((photo) => (
-            <CarouselItem key={photo.id}>
-              <div className="space-y-2">
-                <img
-                  src={photo.photo_url}
-                  alt={photo.caption || 'Check-in photo'}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-                {photo.caption && (
-                  <p className="text-sm text-center text-muted-foreground">
-                    {photo.caption}
-                  </p>
-                )}
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
+      <div className="relative">
+        <Carousel className="w-full">
+          <CarouselContent>
+            {photos.map((photo) => (
+              <CarouselItem key={photo.id}>
+                <div className="space-y-2">
+                  <div className="aspect-[3/2] w-full">
+                    <img
+                      src={photo.photo_url}
+                      alt={photo.caption || 'Check-in photo'}
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  </div>
+                  {photo.caption && (
+                    <p className="text-sm text-center text-muted-foreground">
+                      {photo.caption}
+                    </p>
+                  )}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="absolute -left-12 lg:-left-16 bg-primary hover:bg-primary/80 text-white" />
+          <CarouselNext className="absolute -right-12 lg:-right-16 bg-primary hover:bg-primary/80 text-white" />
+        </Carousel>
+      </div>
     </section>
   );
 };

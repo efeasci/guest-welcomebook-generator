@@ -19,16 +19,18 @@ interface PhotoCarouselProps {
 
 const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarouselProps) => {
   return (
-    <Carousel className="w-full">
+    <Carousel className="w-full relative">
       <CarouselContent>
         {photos.map((photo, index) => (
           <CarouselItem key={photo.id} className="basis-1/2 lg:basis-1/3">
             <div className="relative group">
-              <img
-                src={photo.photo_url}
-                alt={`Check-in photo ${index + 1}`}
-                className="w-full h-48 object-cover rounded-lg"
-              />
+              <div className="aspect-[3/2] w-full">
+                <img
+                  src={photo.photo_url}
+                  alt={`Check-in photo ${index + 1}`}
+                  className="w-full h-full object-contain rounded-lg"
+                />
+              </div>
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                 <div className="flex gap-2">
                   {index > 0 && (
@@ -91,8 +93,8 @@ const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarou
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
+      <CarouselPrevious className="absolute -left-12 lg:-left-16 bg-primary hover:bg-primary/80 text-white" />
+      <CarouselNext className="absolute -right-12 lg:-right-16 bg-primary hover:bg-primary/80 text-white" />
     </Carousel>
   );
 };
