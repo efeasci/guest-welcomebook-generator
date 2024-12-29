@@ -47,7 +47,6 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         fields: ['name', 'formatted_address', 'place_id', 'geometry', 'photos']
       });
 
-      // Handle place selection
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         console.log('Selected place:', place);
@@ -64,47 +63,55 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
         onPlaceSelect(place);
       });
 
-      // Add click handlers for the suggestions
-      const addClickHandlers = () => {
+      // Set up click handlers for the suggestions
+      const setupClickHandlers = () => {
         const pacContainer = document.querySelector('.pac-container');
-        if (pacContainer && !pacContainer.hasAttribute('data-click-handler')) {
-          pacContainer.setAttribute('data-click-handler', 'true');
+        if (!pacContainer || pacContainer.hasAttribute('data-click-handler')) return;
+
+        console.log('Setting up click handlers for suggestions');
+        pacContainer.setAttribute('data-click-handler', 'true');
+
+        // Prevent the input from losing focus
+        pacContainer.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+
+        // Handle clicks on suggestions
+        pacContainer.addEventListener('click', (e) => {
+          const target = e.target as HTMLElement;
+          const pacItem = target.closest('.pac-item');
           
-          // Prevent the input from losing focus when clicking suggestions
-          pacContainer.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-          });
+          if (pacItem) {
+            console.log('Suggestion clicked:', pacItem);
+            
+            // Get the main text and secondary text
+            const mainText = pacItem.querySelector('.pac-item-query')?.textContent || '';
+            const secondaryText = pacItem.textContent?.replace(mainText, '').trim() || '';
+            const fullText = `${mainText} ${secondaryText}`.trim();
+            
+            console.log('Selected text:', fullText);
 
-          // Handle clicks on suggestions
-          pacContainer.addEventListener('click', (e) => {
-            const target = e.target as HTMLElement;
-            const pacItem = target.closest('.pac-item');
-            if (pacItem) {
-              const placeText = Array.from(pacItem.childNodes)
-                .map(node => (node as HTMLElement).textContent || '')
-                .join(' ')
-                .trim();
+            if (searchInputRef.current) {
+              // Set the input value
+              searchInputRef.current.value = fullText;
+              onChange(fullText);
 
-              if (searchInputRef.current) {
-                searchInputRef.current.value = placeText;
-                // Trigger the place_changed event
+              // Simulate a place selection
+              setTimeout(() => {
                 google.maps.event.trigger(autocomplete, 'place_changed');
-              }
+              }, 100);
             }
-          });
-        }
-      };
-
-      // Create an observer to watch for the pac-container being added to the DOM
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.addedNodes.length) {
-            addClickHandlers();
           }
         });
+      };
+
+      // Create an observer to watch for the pac-container
+      const observer = new MutationObserver((mutations, observer) => {
+        setupClickHandlers();
       });
 
-      // Start observing the document body for the pac-container
+      // Start observing with a wider scope
       observer.observe(document.body, {
         childList: true,
         subtree: true
