@@ -7,15 +7,30 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
     const requestBody = {
       url: airbnbUrl,
       limit: 1,
-      wait: true,
-      javascript: true,
-      selectors: [
-        { selector: '[data-testid="listing-title"]', name: 'title' },
-        { selector: 'meta[property="og:image"]', name: 'image', attribute: 'content' },
-        { selector: '[data-testid="check-in-time"]', name: 'checkIn' },
-        { selector: '[data-testid="check-out-time"]', name: 'checkOut' },
-        { selector: '[data-testid="house-rules-section"] li', name: 'houseRules' }
-      ]
+      scrapeRules: {
+        title: {
+          selector: '[data-testid="listing-title"]',
+          type: 'text'
+        },
+        image: {
+          selector: 'meta[property="og:image"]',
+          type: 'attribute',
+          attribute: 'content'
+        },
+        checkIn: {
+          selector: '[data-testid="check-in-time"]',
+          type: 'text'
+        },
+        checkOut: {
+          selector: '[data-testid="check-out-time"]',
+          type: 'text'
+        },
+        houseRules: {
+          selector: '[data-testid="house-rules-section"] li',
+          type: 'text',
+          multiple: true
+        }
+      }
     };
 
     console.log('Making request to Firecrawl API with body:', JSON.stringify(requestBody, null, 2));
@@ -25,8 +40,6 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'application/json',
-        'User-Agent': 'Supabase Edge Function'
       },
       body: JSON.stringify(requestBody)
     });
@@ -44,17 +57,18 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
     const crawlResponse = await response.json();
     console.log('Crawl response:', crawlResponse);
 
-    if (!crawlResponse.data?.[0]?.content) {
-      throw new Error('No content received from Firecrawl API');
+    if (!crawlResponse.success) {
+      throw new Error(crawlResponse.error || 'Failed to crawl website');
     }
 
-    const content = crawlResponse.data[0].content;
+    // Extract the data from the first result
+    const content = crawlResponse.data[0];
     return {
-      title: content.title?.[0],
-      image_url: content.image?.[0],
-      check_in: content.checkIn?.[0] || "15:00",
-      check_out: content.checkOut?.[0] || "11:00",
-      house_rules: content.houseRules || [],
+      title: content.title,
+      image_url: content.image,
+      check_in: content.checkIn || "15:00",
+      check_out: content.checkOut || "11:00",
+      house_rules: Array.isArray(content.houseRules) ? content.houseRules : [],
     };
   } catch (error) {
     console.error('Error in fetchFromFirecrawl:', error);
