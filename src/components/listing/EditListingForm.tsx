@@ -6,6 +6,7 @@ import ListingRulesFields from "./ListingRulesFields";
 import ListingHostFields from "./ListingHostFields";
 import ImageUploadSection from "./ImageUploadSection";
 import RecommendationsManager from "./RecommendationsManager";
+import CheckInPhotosManager from "./CheckInPhotosManager";
 import { useListingForm } from "./useListingForm";
 import { useNavigate } from "react-router-dom";
 
@@ -53,6 +54,10 @@ const EditListingForm = ({ initialData, id }: EditListingFormProps) => {
         formData={formData}
         onChange={handleChange}
       />
+
+      {currentListingId && (
+        <CheckInPhotosManager listingId={currentListingId} />
+      )}
 
       <ListingWifiFields
         formData={formData}

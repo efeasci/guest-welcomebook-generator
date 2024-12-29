@@ -6,6 +6,7 @@ import TitleSection from "@/components/welcome/TitleSection";
 import LocationSection from "@/components/welcome/LocationSection";
 import DirectionsSection from "@/components/welcome/DirectionsSection";
 import CheckInSection from "@/components/welcome/CheckInSection";
+import CheckInPhotosSection from "@/components/welcome/CheckInPhotosSection";
 import WifiSection from "@/components/welcome/WifiSection";
 import RulesSection from "@/components/welcome/RulesSection";
 import LeaveSection from "@/components/welcome/LeaveSection";
@@ -84,6 +85,8 @@ const Welcome = () => {
               checkInMethod={listing.check_in_method}
               checkInInstructions={listing.check_in_instructions}
             />
+
+            {listing.id && <CheckInPhotosSection listingId={listing.id} />}
 
             <WifiSection
               wifiNetwork={listing.wifi_network}
