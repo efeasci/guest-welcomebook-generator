@@ -13,7 +13,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
-    const initAutocomplete = async () => {
+    const initAutocomplete = async (): Promise<(() => void) | void> => {
       try {
         const { data: { api_key }, error } = await supabase.functions.invoke('get-google-maps-key');
         if (error) {
@@ -90,7 +90,6 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
             searchInputRef.current.value = fullText;
             onChange(fullText);
             
-            // Trigger place_changed event
             setTimeout(() => {
               if (autocomplete) {
                 google.maps.event.trigger(autocomplete, 'place_changed');
@@ -116,7 +115,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
 
     const cleanup = initAutocomplete();
     return () => {
-      if (typeof cleanup === 'function') {
+      if (cleanup && typeof cleanup === 'function') {
         cleanup();
       }
       if (autocomplete) {
