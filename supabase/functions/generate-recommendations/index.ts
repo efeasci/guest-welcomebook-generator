@@ -13,6 +13,8 @@ serve(async (req) => {
 
   try {
     const { address, category } = await req.json()
+    console.log('Received request with address:', address, 'and category:', category)
+    
     const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'))
 
     const prompt = `Generate exactly 5 specific recommendations for ${category} near ${address}. Format the response as a JSON array with objects containing 'name' and 'description' properties. Keep descriptions concise and informative.`
@@ -38,6 +40,7 @@ serve(async (req) => {
       }
     } catch (e) {
       console.error('Error parsing recommendations:', e)
+      throw new Error('Failed to parse recommendations')
     }
 
     // Get place details and photos using Google Places API
@@ -45,25 +48,43 @@ serve(async (req) => {
       recommendations.slice(0, 5).map(async (rec: any) => {
         console.log('Enriching recommendation:', rec.name)
         
-        const placeResponse = await fetch(
-          `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
-            rec.name + ' near ' + address
-          )}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
-        )
-        const placeData = await placeResponse.json()
-        
-        if (placeData.results && placeData.results[0]) {
-          const place = placeData.results[0]
+        try {
+          const placeResponse = await fetch(
+            `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
+              rec.name + ' near ' + address
+            )}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+          )
+          const placeData = await placeResponse.json()
+          
+          if (placeData.results && placeData.results[0]) {
+            const place = placeData.results[0]
+            return {
+              ...rec,
+              // Ensure address is never null by falling back to the listing address
+              address: place.formatted_address || address,
+              location: place.geometry.location || { lat: 0, lng: 0 },
+              photo: place.photos?.[0]?.photo_reference 
+                ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+                : null
+            }
+          }
+          // If no place found, use fallback values
           return {
             ...rec,
-            address: place.formatted_address,
-            location: place.geometry.location,
-            photo: place.photos?.[0]?.photo_reference 
-              ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
-              : null
+            address: address, // Fallback to the listing address
+            location: { lat: 0, lng: 0 },
+            photo: null
+          }
+        } catch (error) {
+          console.error('Error enriching recommendation:', error)
+          // Return fallback values on error
+          return {
+            ...rec,
+            address: address, // Fallback to the listing address
+            location: { lat: 0, lng: 0 },
+            photo: null
           }
         }
-        return rec
       })
     )
 
