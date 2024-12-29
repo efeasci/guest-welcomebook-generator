@@ -37,21 +37,17 @@ serve(async (req) => {
 
     console.log('Crawl response:', crawlResponse)
 
+    const content = crawlResponse.data[0]?.content || ''
+    
     // Extract data from the crawled content
-    const data = crawlResponse.data[0]
-    if (!data) {
-      throw new Error('No data found in crawl response')
-    }
-
-    // Parse the crawled content to extract relevant information
     const extractedData = {
-      title: extractTitle(data.content),
-      image_url: extractImage(data.content),
-      check_in: extractCheckInTime(data.content),
-      check_out: extractCheckOutTime(data.content),
-      check_in_method: extractCheckInMethod(data.content),
-      house_rules: extractHouseRules(data.content),
-      before_you_leave: extractBeforeYouLeave(data.content)
+      title: extractTitle(content),
+      image_url: extractImage(content),
+      check_in: extractCheckInTime(content),
+      check_out: extractCheckOutTime(content),
+      check_in_method: extractCheckInMethod(content),
+      house_rules: extractHouseRules(content),
+      before_you_leave: extractBeforeYouLeave(content)
     }
 
     console.log('Extracted data:', extractedData)
@@ -85,52 +81,52 @@ serve(async (req) => {
 
 // Helper functions to extract specific data from crawled content
 function extractTitle(content: string): string {
-  // Look for title in meta tags or h1
   const titleMatch = content.match(/<title>(.*?)<\/title>/) || 
                     content.match(/<h1[^>]*>(.*?)<\/h1>/);
   return titleMatch ? titleMatch[1].trim() : '';
 }
 
 function extractImage(content: string): string {
-  // Look for the first image in the main content area
-  const imageMatch = content.match(/<img[^>]+src="([^">]+)"/);
+  const imageMatch = content.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i) ||
+                    content.match(/<img[^>]+src="([^">]+)"/);
   return imageMatch ? imageMatch[1] : '';
 }
 
 function extractCheckInTime(content: string): string {
-  // Look for check-in time pattern (e.g., "14:00")
-  const checkInMatch = content.match(/check.?in.*?(\d{1,2}:\d{2})/i);
+  const checkInMatch = content.match(/check.?in.*?(\d{1,2}:\d{2})/i) ||
+                      content.match(/(\d{1,2}:\d{2})\s*(?:PM|AM)?\s*check.?in/i);
   return checkInMatch ? checkInMatch[1] : '';
 }
 
 function extractCheckOutTime(content: string): string {
-  // Look for check-out time pattern
-  const checkOutMatch = content.match(/check.?out.*?(\d{1,2}:\d{2})/i);
+  const checkOutMatch = content.match(/check.?out.*?(\d{1,2}:\d{2})/i) ||
+                       content.match(/(\d{1,2}:\d{2})\s*(?:PM|AM)?\s*check.?out/i);
   return checkOutMatch ? checkOutMatch[1] : '';
 }
 
 function extractCheckInMethod(content: string): string {
-  // Look for check-in method information
-  const methodMatch = content.match(/self check.?in|keypad|lockbox/i);
-  return methodMatch ? methodMatch[0] : '';
+  const methodSection = content.match(/check.?in.*?instructions?:(.*?)(?:<\/|$)/is);
+  return methodSection ? methodSection[1].trim() : '';
 }
 
 function extractHouseRules(content: string): string[] {
-  // Look for house rules section and extract list items
-  const rulesMatch = content.match(/house rules(.*?)(?=<\/section>|<section)/is);
-  if (!rulesMatch) return [];
+  const rulesSection = content.match(/house\s*rules(.*?)(?:<\/section>|<section)/is);
+  if (!rulesSection) return [];
   
-  const rules = rulesMatch[1].match(/<li[^>]*>(.*?)<\/li>/g);
-  return rules ? rules.map(rule => rule.replace(/<[^>]+>/g, '').trim())
-                     .filter(rule => rule.length > 0) : [];
+  const rules = rulesSection[1].match(/<li[^>]*>(.*?)<\/li>/g);
+  return rules 
+    ? rules.map(rule => rule.replace(/<[^>]+>/g, '').trim())
+          .filter(rule => rule.length > 0)
+    : [];
 }
 
 function extractBeforeYouLeave(content: string): string[] {
-  // Look for checkout instructions or "before you leave" section
-  const leaveMatch = content.match(/before you leave|checkout instructions(.*?)(?=<\/section>|<section)/is);
-  if (!leaveMatch) return [];
+  const checkoutSection = content.match(/(?:before\s+you\s+leave|checkout\s+instructions?)(.*?)(?:<\/section>|<section)/is);
+  if (!checkoutSection) return [];
   
-  const instructions = leaveMatch[1].match(/<li[^>]*>(.*?)<\/li>/g);
-  return instructions ? instructions.map(instruction => instruction.replace(/<[^>]+>/g, '').trim())
-                                  .filter(instruction => instruction.length > 0) : [];
+  const instructions = checkoutSection[1].match(/<li[^>]*>(.*?)<\/li>/g);
+  return instructions 
+    ? instructions.map(instruction => instruction.replace(/<[^>]+>/g, '').trim())
+                 .filter(instruction => instruction.length > 0)
+    : [];
 }
