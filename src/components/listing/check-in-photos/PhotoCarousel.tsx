@@ -59,17 +59,29 @@ const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarou
                 </div>
               </div>
               <div 
-                className="mt-2 cursor-text" 
+                className="mt-2 relative group cursor-text" 
                 onClick={(e) => {
                   const input = e.currentTarget.querySelector('input');
-                  if (input) input.focus();
+                  if (input) {
+                    input.focus();
+                    // Prevent event bubbling
+                    e.stopPropagation();
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    const input = e.currentTarget.querySelector('input');
+                    if (input) input.focus();
+                  }
                 }}
               >
                 <Input
                   value={photo.caption || ''}
                   onChange={(e) => onCaptionChange(photo.id, e.target.value)}
                   placeholder="Add a caption..."
-                  className="w-full"
+                  className="w-full transition-colors hover:border-primary focus-visible:ring-1"
                 />
               </div>
             </div>
