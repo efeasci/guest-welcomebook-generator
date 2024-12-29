@@ -13,7 +13,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
-    const initAutocomplete = async (): Promise<(() => void) | void> => {
+    const initAutocomplete = async () => {
       try {
         const { data: { api_key }, error } = await supabase.functions.invoke('get-google-maps-key');
         if (error) {
@@ -31,11 +31,11 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
 
           script.onload = () => {
             console.log('Google Maps script loaded');
-            setupAutocomplete();
+            return setupAutocomplete();
           };
         } else {
           console.log('Google Maps already loaded');
-          setupAutocomplete();
+          return setupAutocomplete();
         }
       } catch (error) {
         console.error('Error initializing Google Maps:', error);
@@ -113,11 +113,9 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
       };
     };
 
-    const cleanup = initAutocomplete();
+    initAutocomplete();
+
     return () => {
-      if (cleanup && typeof cleanup === 'function') {
-        cleanup();
-      }
       if (autocomplete) {
         google.maps.event.clearInstanceListeners(autocomplete);
       }
