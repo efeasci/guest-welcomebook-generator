@@ -22,6 +22,10 @@ interface EditListingDialogProps {
     check_in: string;
     check_out: string;
     house_rules: string[] | null;
+    airbnb_link?: string | null;
+    image_url?: string | null;
+    check_in_method?: string | null;
+    before_you_leave?: string[] | null;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,6 +41,10 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
     check_in: listing.check_in,
     check_out: listing.check_out,
     house_rules: listing.house_rules?.join("\n") || "",
+    airbnb_link: listing.airbnb_link || "",
+    image_url: listing.image_url || "",
+    check_in_method: listing.check_in_method || "",
+    before_you_leave: listing.before_you_leave?.join("\n") || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +57,7 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
         .update({
           ...formData,
           house_rules: formData.house_rules.split("\n").filter(rule => rule.trim()),
+          before_you_leave: formData.before_you_leave.split("\n").filter(rule => rule.trim()),
           updated_at: new Date().toISOString(),
         })
         .eq("id", listing.id);
@@ -95,6 +104,39 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
             />
           </div>
           <div>
+            <label htmlFor="airbnb_link" className="text-sm font-medium">
+              Airbnb Link
+            </label>
+            <Input
+              id="airbnb_link"
+              value={formData.airbnb_link}
+              onChange={(e) => setFormData({ ...formData, airbnb_link: e.target.value })}
+              placeholder="Enter Airbnb listing URL"
+            />
+          </div>
+          <div>
+            <label htmlFor="image_url" className="text-sm font-medium">
+              Image URL
+            </label>
+            <Input
+              id="image_url"
+              value={formData.image_url}
+              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+              placeholder="Enter image URL"
+            />
+          </div>
+          <div>
+            <label htmlFor="check_in_method" className="text-sm font-medium">
+              Check-in Method
+            </label>
+            <Input
+              id="check_in_method"
+              value={formData.check_in_method}
+              onChange={(e) => setFormData({ ...formData, check_in_method: e.target.value })}
+              placeholder="Enter check-in instructions"
+            />
+          </div>
+          <div>
             <label htmlFor="wifi" className="text-sm font-medium">
               WiFi Password
             </label>
@@ -137,6 +179,18 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
               value={formData.house_rules}
               onChange={(e) => setFormData({ ...formData, house_rules: e.target.value })}
               rows={4}
+            />
+          </div>
+          <div>
+            <label htmlFor="before_you_leave" className="text-sm font-medium">
+              Before You Leave (one per line)
+            </label>
+            <Textarea
+              id="before_you_leave"
+              value={formData.before_you_leave}
+              onChange={(e) => setFormData({ ...formData, before_you_leave: e.target.value })}
+              rows={4}
+              placeholder="Enter checkout instructions"
             />
           </div>
           <DialogFooter>

@@ -12,11 +12,15 @@ export type Database = {
       listings: {
         Row: {
           address: string
+          airbnb_link: string | null
+          before_you_leave: string[] | null
           check_in: string
+          check_in_method: string | null
           check_out: string
           created_at: string | null
           house_rules: string[] | null
           id: string
+          image_url: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -24,11 +28,15 @@ export type Database = {
         }
         Insert: {
           address: string
+          airbnb_link?: string | null
+          before_you_leave?: string[] | null
           check_in: string
+          check_in_method?: string | null
           check_out: string
           created_at?: string | null
           house_rules?: string[] | null
           id?: string
+          image_url?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -36,11 +44,15 @@ export type Database = {
         }
         Update: {
           address?: string
+          airbnb_link?: string | null
+          before_you_leave?: string[] | null
           check_in?: string
+          check_in_method?: string | null
           check_out?: string
           created_at?: string | null
           house_rules?: string[] | null
           id?: string
+          image_url?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
