@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Wifi, Clock, MapPin, Book } from "lucide-react";
+import { Wifi, Clock, MapPin, Book, DoorClosed } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,6 +103,19 @@ const Welcome = () => {
                 <ul className="list-disc list-inside space-y-2">
                   {listing.house_rules.map((rule, index) => (
                     <li key={index} className="text-gray-700">{rule}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {listing.before_you_leave && listing.before_you_leave.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <DoorClosed className="h-5 w-5 text-primary" /> Before You Leave
+                </h2>
+                <ul className="list-disc list-inside space-y-2">
+                  {listing.before_you_leave.map((instruction, index) => (
+                    <li key={index} className="text-gray-700">{instruction}</li>
                   ))}
                 </ul>
               </section>
