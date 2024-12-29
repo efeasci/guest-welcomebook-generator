@@ -16,6 +16,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          is_generated: boolean | null
           listing_id: string | null
           location: Json
           name: string
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          is_generated?: boolean | null
           listing_id?: string | null
           location: Json
           name: string
@@ -38,6 +40,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          is_generated?: boolean | null
           listing_id?: string | null
           location?: Json
           name?: string

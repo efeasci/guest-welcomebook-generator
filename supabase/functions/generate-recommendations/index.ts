@@ -12,7 +12,7 @@ const getCategoryConfig = (category: string) => {
     case "Places to Eat":
       return {
         type: "restaurant",
-        radius: 3200, // 2 miles in meters
+        radius: 3200,
         minRating: 4,
         description: "restaurants"
       };
@@ -33,14 +33,14 @@ const getCategoryConfig = (category: string) => {
     case "Nearest Shopping":
       return {
         type: "supermarket",
-        radius: 1600, // 1 mile in meters
+        radius: 1600,
         minRating: 3,
         description: "grocery stores and supermarkets"
       };
     case "Things to Do":
       return {
         type: "tourist_attraction",
-        radius: 8000, // 5 miles in meters
+        radius: 8000,
         minRating: 4,
         description: "attractions and activities"
       };
