@@ -33,13 +33,14 @@ serve(async (req) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
           url: airbnbUrl,
           limit: 1,
-          wait: true, // Wait for the crawl to complete
-          javascript: true, // Enable JavaScript rendering
+          wait: true,
+          javascript: true,
           scrapeOptions: {
             formats: ['markdown', 'html'],
             selectors: [
@@ -78,14 +79,14 @@ serve(async (req) => {
       }
 
       const content = crawlResponse.data[0]?.content || ''
-      console.log('Extracted content:', content.substring(0, 200)) // Log first 200 chars for debugging
+      console.log('Extracted content:', content.substring(0, 200))
       
       // Extract data from the crawled content
       const extractedData = {
         title: extractTitle(content),
         image_url: extractImage(content),
-        check_in: extractCheckInTime(content) || "15:00",  // Default check-in time
-        check_out: extractCheckOutTime(content) || "11:00", // Default check-out time
+        check_in: extractCheckInTime(content) || "15:00",
+        check_out: extractCheckOutTime(content) || "11:00",
         check_in_method: extractCheckInMethod(content),
         house_rules: extractHouseRules(content),
         before_you_leave: extractBeforeYouLeave(content)
