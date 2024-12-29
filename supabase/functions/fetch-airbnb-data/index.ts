@@ -6,6 +6,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -16,6 +17,13 @@ serve(async (req) => {
 
     if (!airbnbUrl) {
       throw new Error('No Airbnb URL provided')
+    }
+
+    // Validate URL format
+    try {
+      new URL(airbnbUrl)
+    } catch {
+      throw new Error('Invalid URL format')
     }
 
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY')
@@ -32,6 +40,26 @@ serve(async (req) => {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
+      const requestBody = {
+        url: airbnbUrl,
+        limit: 1,
+        wait: true,
+        javascript: true,
+        scrapeOptions: {
+          formats: ['markdown', 'html'],
+          selectors: [
+            { name: 'title', selector: '[data-testid="listing-title"]' },
+            { name: 'image', selector: 'meta[property="og:image"]', attribute: 'content' },
+            { name: 'checkIn', selector: '[data-testid="check-in-time"]' },
+            { name: 'checkOut', selector: '[data-testid="check-out-time"]' },
+            { name: 'houseRules', selector: '[data-testid="house-rules-section"] li' },
+            { name: 'description', selector: '[data-testid="listing-description"]' }
+          ]
+        }
+      }
+
+      console.log('Request body:', JSON.stringify(requestBody, null, 2))
+
       const response = await fetch('https://api.firecrawl.co/api/v1/crawl', {
         method: 'POST',
         headers: {
@@ -39,23 +67,7 @@ serve(async (req) => {
           'Authorization': `Bearer ${apiKey}`,
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          url: airbnbUrl,
-          limit: 1,
-          wait: true,
-          javascript: true,
-          scrapeOptions: {
-            formats: ['markdown', 'html'],
-            selectors: [
-              { name: 'title', selector: '[data-testid="listing-title"]' },
-              { name: 'image', selector: 'meta[property="og:image"]', attribute: 'content' },
-              { name: 'checkIn', selector: '[data-testid="check-in-time"]' },
-              { name: 'checkOut', selector: '[data-testid="check-out-time"]' },
-              { name: 'houseRules', selector: '[data-testid="house-rules-section"] li' },
-              { name: 'description', selector: '[data-testid="listing-description"]' }
-            ]
-          }
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       })
 
