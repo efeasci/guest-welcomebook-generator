@@ -53,7 +53,10 @@ const RecommendationsManager = ({ listingId, address }: RecommendationsManagerPr
         .eq('listing_id', listingId);
       
       if (error) throw error;
-      return data;
+      return data.map(rec => ({
+        ...rec,
+        location: rec.location as { lat: number; lng: number }
+      }));
     }
   });
 

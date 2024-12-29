@@ -22,8 +22,8 @@ interface EditListingFormProps {
     check_in_instructions: string;
     check_in_method: string;
     check_out: string;
-    house_rules: string[];
-    before_you_leave: string[];
+    house_rules: string[] | string;
+    before_you_leave: string[] | string;
     image_url: string;
     directions: string;
     host_name: string;
