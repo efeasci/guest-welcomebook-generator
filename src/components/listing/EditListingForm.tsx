@@ -9,7 +9,7 @@ import ListingCheckInFields from "./ListingCheckInFields";
 import ListingRulesFields from "./ListingRulesFields";
 
 interface EditListingFormProps {
-  id: string;
+  id?: string;
   initialData: {
     title: string;
     address: string;
@@ -21,6 +21,7 @@ interface EditListingFormProps {
     house_rules: string[];
     before_you_leave: string[];
     image_url: string;
+    user_id?: string;
   };
 }
 
@@ -36,7 +37,7 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
     setIsUploading(true);
     try {
       const fileExt = file.name.split(".").pop();
-      const filePath = `${id}/${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${id || 'new'}/${crypto.randomUUID()}.${fileExt}`;
 
       const { error: uploadError, data } = await supabase.storage
         .from("listing-images")
@@ -47,13 +48,6 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
       const { data: { publicUrl } } = supabase.storage
         .from("listing-images")
         .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from("listings")
-        .update({ image_url: publicUrl })
-        .eq("id", id);
-
-      if (updateError) throw updateError;
 
       setFormData(prev => ({ ...prev, image_url: publicUrl }));
       toast.success("Image uploaded successfully");
@@ -76,23 +70,12 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
 
   const handleAirbnbSync = async (data: any) => {
     try {
-      const updateData = {
-        ...data,
-        image_url: data.image_url || formData.image_url,
-        house_rules: Array.isArray(data.house_rules) ? data.house_rules : [],
-        before_you_leave: Array.isArray(data.before_you_leave) ? data.before_you_leave : [],
-      };
-
-      const { error: updateError } = await supabase
-        .from("listings")
-        .update(updateData)
-        .eq("id", id);
-
-      if (updateError) throw updateError;
-
       setFormData(prev => ({ 
         ...prev, 
-        ...updateData,
+        ...data,
+        image_url: data.image_url || prev.image_url,
+        house_rules: Array.isArray(data.house_rules) ? data.house_rules : [],
+        before_you_leave: Array.isArray(data.before_you_leave) ? data.before_you_leave : [],
       }));
       
       toast.success("Listing updated with Airbnb data");
@@ -104,22 +87,40 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
 
   const handleSubmit = async () => {
     try {
-      const { error } = await supabase
-        .from("listings")
-        .update({
-          ...formData,
-          house_rules: formData.house_rules.filter(rule => rule.trim()),
-          before_you_leave: formData.before_you_leave.filter(rule => rule.trim()),
-        })
-        .eq("id", id);
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error("No user found");
+
+      const listingData = {
+        ...formData,
+        user_id: user.id,
+        house_rules: formData.house_rules.filter(rule => rule.trim()),
+        before_you_leave: formData.before_you_leave.filter(rule => rule.trim()),
+      };
+
+      const { data, error } = id
+        ? await supabase
+            .from("listings")
+            .update(listingData)
+            .eq("id", id)
+            .select()
+            .single()
+        : await supabase
+            .from("listings")
+            .insert(listingData)
+            .select()
+            .single();
 
       if (error) throw error;
 
-      toast.success("Listing updated successfully");
-      navigate("/");
+      toast.success(id ? "Listing updated successfully" : "Listing created successfully");
+      
+      if (data) {
+        navigate(id ? "/" : `/welcome/${data.id}`);
+      }
     } catch (error) {
-      console.error("Error updating listing:", error);
-      toast.error("Failed to update listing");
+      console.error("Error saving listing:", error);
+      toast.error(id ? "Failed to update listing" : "Failed to create listing");
     }
   };
 
@@ -184,7 +185,7 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
           Cancel
         </Button>
         <Button onClick={handleSubmit}>
-          Save Changes
+          {id ? "Save Changes" : "Create Listing"}
         </Button>
       </div>
     </div>

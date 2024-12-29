@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/App";
-import AddListingDialog from "@/components/AddListingDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import ListingCard from "@/components/listing/ListingCard";
@@ -26,7 +25,6 @@ export default function Index() {
   const { toast: uiToast } = useToast();
   const [listings, setListings] = useState<Tables<"listings">[]>([]);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -104,13 +102,8 @@ export default function Index() {
       <DashboardHeader 
         profile={profile}
         userEmail={user?.email}
-        onAddListing={() => setIsAddDialogOpen(true)}
+        onAddListing={() => navigate('/edit')}
         onSignOut={handleSignOut}
-      />
-
-      <AddListingDialog 
-        open={isAddDialogOpen} 
-        onOpenChange={setIsAddDialogOpen}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

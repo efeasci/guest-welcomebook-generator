@@ -72,7 +72,7 @@ const App = () => {
                 element={<Welcome />}
               />
               <Route
-                path="/edit/:id"
+                path="/edit/:id?"
                 element={
                   <ProtectedRoute>
                     <EditListing />
