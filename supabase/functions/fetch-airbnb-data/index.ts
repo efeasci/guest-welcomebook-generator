@@ -29,6 +29,9 @@ serve(async (req) => {
     console.log('Making request to Firecrawl API...')
     
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
       const response = await fetch('https://api.firecrawl.co/api/v1/crawl', {
         method: 'POST',
         headers: {
@@ -52,8 +55,11 @@ serve(async (req) => {
               { name: 'description', selector: '[data-testid="listing-description"]' }
             ]
           }
-        })
+        }),
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       console.log('Firecrawl API response status:', response.status)
       
