@@ -5,7 +5,7 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
   console.log('Starting Firecrawl request for URL:', airbnbUrl);
   
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
     const requestBody = {
@@ -31,9 +31,9 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'application/json'
       },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
+      body: JSON.stringify(requestBody)
     });
 
     clearTimeout(timeoutId);
