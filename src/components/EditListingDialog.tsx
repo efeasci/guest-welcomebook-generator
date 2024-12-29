@@ -52,6 +52,7 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
   });
 
   const handleFieldChange = (field: string, value: string) => {
+    console.log(`Updating field ${field} with value:`, value);
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -70,10 +71,13 @@ const EditListingDialog = ({ listing, open, onOpenChange, onSuccess }: EditListi
         })
         .eq("id", listing.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating listing:", error);
+        throw error;
+      }
 
       toast.success("Listing updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["listings"] });
+      await queryClient.invalidateQueries({ queryKey: ["listings"] });
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {

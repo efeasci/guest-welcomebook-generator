@@ -15,7 +15,6 @@ const AddressAutocomplete = ({ value, onChange, className }: AddressAutocomplete
   useEffect(() => {
     const initAutocomplete = async () => {
       try {
-        // Load Google Maps script dynamically
         const { data: { api_key }, error } = await supabase.functions.invoke('get-google-maps-key');
         if (error) throw error;
 
@@ -37,6 +36,7 @@ const AddressAutocomplete = ({ value, onChange, className }: AddressAutocomplete
               autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
                 if (place.formatted_address) {
+                  console.log('Selected address:', place.formatted_address);
                   onChange(place.formatted_address, place.place_id);
                 }
               });
@@ -53,6 +53,7 @@ const AddressAutocomplete = ({ value, onChange, className }: AddressAutocomplete
           autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
             if (place.formatted_address) {
+              console.log('Selected address:', place.formatted_address);
               onChange(place.formatted_address, place.place_id);
             }
           });
@@ -73,12 +74,17 @@ const AddressAutocomplete = ({ value, onChange, className }: AddressAutocomplete
     };
   }, [onChange]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('Input value changed:', e.target.value);
+    onChange(e.target.value);
+  };
+
   return (
     <Input
       ref={inputRef}
       type="text"
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={handleInputChange}
       className={className}
       placeholder="Enter address"
     />
