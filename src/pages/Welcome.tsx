@@ -1,17 +1,7 @@
 import { useParams } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import TitleSection from "@/components/welcome/TitleSection";
-import LocationSection from "@/components/welcome/LocationSection";
-import DirectionsSection from "@/components/welcome/DirectionsSection";
-import CheckInSection from "@/components/welcome/CheckInSection";
-import CheckInPhotosSection from "@/components/welcome/CheckInPhotosSection";
-import WifiSection from "@/components/welcome/WifiSection";
-import RulesSection from "@/components/welcome/RulesSection";
-import LeaveSection from "@/components/welcome/LeaveSection";
-import HostSection from "@/components/welcome/HostSection";
-import RecommendationsSection from "@/components/welcome/RecommendationsSection";
+import WelcomeCard from "./welcome/WelcomeCard";
 
 const Welcome = () => {
   const { id } = useParams();
@@ -62,51 +52,12 @@ const Welcome = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto shadow-xl overflow-hidden">
-          <TitleSection
-            title={listing.title}
-            address={listing.address}
-            imageUrl={listing.image_url}
-            randomPlaceholder={randomPlaceholder}
-            getGoogleMapsUrl={getGoogleMapsUrl}
-          />
-
-          <CardContent className="space-y-8">
-            <LocationSection
-              address={listing.address}
-              getDirectionsUrl={getDirectionsUrl}
-            />
-
-            <DirectionsSection directions={listing.directions} />
-
-            <CheckInSection
-              checkIn={listing.check_in}
-              checkOut={listing.check_out}
-              checkInMethod={listing.check_in_method}
-              checkInInstructions={listing.check_in_instructions}
-            />
-
-            {listing.id && <CheckInPhotosSection listingId={listing.id} />}
-
-            <WifiSection
-              wifiNetwork={listing.wifi_network}
-              wifiPassword={listing.wifi_password}
-            />
-
-            <RulesSection rules={listing.house_rules} />
-
-            <LeaveSection instructions={listing.before_you_leave} />
-
-            <RecommendationsSection listingId={listing.id} />
-
-            <HostSection
-              name={listing.host_name}
-              about={listing.host_about}
-              email={listing.host_email}
-              phone={listing.host_phone}
-            />
-          </CardContent>
-        </Card>
+        <WelcomeCard
+          listing={listing}
+          randomPlaceholder={randomPlaceholder}
+          getGoogleMapsUrl={getGoogleMapsUrl}
+          getDirectionsUrl={getDirectionsUrl}
+        />
       </div>
     </div>
   );
