@@ -12,7 +12,7 @@ export default function EditListing() {
   const { isLoading, data: listing } = useQuery({
     queryKey: ["listing", id],
     queryFn: async () => {
-      if (!id) return null; // Return null for new listings
+      if (!id) return null;
       const { data, error } = await supabase
         .from("listings")
         .select("*")
@@ -28,18 +28,25 @@ export default function EditListing() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // For new listings, provide default values
+  // Provide default values for all required fields
   const initialData = listing || {
     title: "",
     address: "",
     wifi_password: "",
+    wifi_network: "",
     check_in: "14:00",
     check_out: "11:00",
+    check_in_method: "",
+    check_in_instructions: "",
     house_rules: [],
     before_you_leave: [],
     airbnb_link: "",
     image_url: "",
-    check_in_method: "",
+    directions: "",
+    host_name: "",
+    host_about: "",
+    host_email: "",
+    host_phone: "",
     user_id: user?.id,
   };
 
