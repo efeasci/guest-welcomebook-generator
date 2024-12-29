@@ -1,4 +1,7 @@
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
 interface ListingRulesFieldsProps {
   formData: {
@@ -9,41 +12,93 @@ interface ListingRulesFieldsProps {
 }
 
 const ListingRulesFields = ({ formData, onChange }: ListingRulesFieldsProps) => {
-  // Convert arrays to strings for display
-  const rulesText = Array.isArray(formData.house_rules) 
-    ? formData.house_rules.join('\n')
-    : formData.house_rules || '';
+  const [newRule, setNewRule] = useState("");
+  const [newInstruction, setNewInstruction] = useState("");
 
-  const beforeLeaveText = Array.isArray(formData.before_you_leave)
-    ? formData.before_you_leave.join('\n')
-    : formData.before_you_leave || '';
+  const rules = Array.isArray(formData.house_rules) 
+    ? formData.house_rules 
+    : (formData.house_rules || "").split("\n").filter(rule => rule.trim());
+
+  const instructions = Array.isArray(formData.before_you_leave)
+    ? formData.before_you_leave
+    : (formData.before_you_leave || "").split("\n").filter(instruction => instruction.trim());
+
+  const handleAddRule = () => {
+    if (newRule.trim()) {
+      const updatedRules = [...rules, newRule.trim()];
+      onChange("house_rules", updatedRules.join("\n"));
+      setNewRule("");
+    }
+  };
+
+  const handleAddInstruction = () => {
+    if (newInstruction.trim()) {
+      const updatedInstructions = [...instructions, newInstruction.trim()];
+      onChange("before_you_leave", updatedInstructions.join("\n"));
+      setNewInstruction("");
+    }
+  };
 
   return (
-    <>
+    <div className="space-y-6">
       <div>
-        <label htmlFor="rules" className="text-sm font-medium">
-          House Rules (one per line)
-        </label>
-        <Textarea
-          id="rules"
-          value={rulesText}
-          onChange={(e) => onChange("house_rules", e.target.value)}
-          rows={4}
-        />
+        <h2 className="text-lg font-semibold mb-4">House Rules</h2>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              value={newRule}
+              onChange={(e) => setNewRule(e.target.value)}
+              placeholder="Add a new house rule"
+              onKeyPress={(e) => e.key === "Enter" && handleAddRule()}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddRule}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <ul className="space-y-2">
+            {rules.map((rule, index) => (
+              <li key={index} className="flex items-center gap-2">
+                <span className="flex-1">{rule}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
+
       <div>
-        <label htmlFor="before_you_leave" className="text-sm font-medium">
-          Before You Leave (one per line)
-        </label>
-        <Textarea
-          id="before_you_leave"
-          value={beforeLeaveText}
-          onChange={(e) => onChange("before_you_leave", e.target.value)}
-          rows={4}
-          placeholder="Enter checkout instructions"
-        />
+        <h2 className="text-lg font-semibold mb-4">Before You Leave</h2>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              value={newInstruction}
+              onChange={(e) => setNewInstruction(e.target.value)}
+              placeholder="Add a new checkout instruction"
+              onKeyPress={(e) => e.key === "Enter" && handleAddInstruction()}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddInstruction}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <ul className="space-y-2">
+            {instructions.map((instruction, index) => (
+              <li key={index} className="flex items-center gap-2">
+                <span className="flex-1">{instruction}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

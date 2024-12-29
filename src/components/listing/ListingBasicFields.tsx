@@ -9,9 +9,8 @@ interface ListingBasicFieldsProps {
   formData: {
     title: string;
     address: string;
-    image_url: string;
-    airbnb_link?: string;
     directions?: string;
+    airbnb_link?: string;
   };
   onChange: (field: string, value: string) => void;
 }
@@ -24,18 +23,13 @@ const ListingBasicFields = ({ formData, onChange }: ListingBasicFieldsProps) => 
     }
 
     try {
-      console.log("Fetching Airbnb data for URL:", formData.airbnb_link);
       const { data, error } = await supabase.functions.invoke('fetch-airbnb-data', {
         body: { airbnbUrl: formData.airbnb_link }
       });
 
       if (error) throw error;
-
-      console.log("Received Airbnb data:", data);
       
-      // Update form fields with crawled data
       if (data.title) onChange("title", data.title);
-      if (data.image_url) onChange("image_url", data.image_url);
       if (data.check_in) onChange("check_in", data.check_in);
       if (data.check_out) onChange("check_out", data.check_out);
       if (data.house_rules) onChange("house_rules", data.house_rules.join("\n"));
@@ -48,39 +42,51 @@ const ListingBasicFields = ({ formData, onChange }: ListingBasicFieldsProps) => 
   };
 
   return (
-    <>
+    <div className="space-y-6">
       <div>
-        <label htmlFor="title" className="text-sm font-medium">
-          Title
-        </label>
-        <Input
-          id="title"
-          value={formData.title}
-          onChange={(e) => onChange("title", e.target.value)}
-          required
-        />
+        <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="title" className="text-sm font-medium">
+              Title
+            </label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => onChange("title", e.target.value)}
+              required
+            />
+          </div>
+        </div>
       </div>
+
       <div>
-        <label htmlFor="address" className="text-sm font-medium">
-          Address
-        </label>
-        <AddressAutocomplete
-          value={formData.address}
-          onChange={(address) => onChange("address", address)}
-        />
+        <h2 className="text-lg font-semibold mb-4">Location</h2>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="address" className="text-sm font-medium">
+              Address
+            </label>
+            <AddressAutocomplete
+              value={formData.address}
+              onChange={(address) => onChange("address", address)}
+            />
+          </div>
+          <div>
+            <label htmlFor="directions" className="text-sm font-medium">
+              Directions
+            </label>
+            <Textarea
+              id="directions"
+              value={formData.directions || ""}
+              onChange={(e) => onChange("directions", e.target.value)}
+              placeholder="Enter any specific directions or instructions to find the property..."
+              className="min-h-[100px]"
+            />
+          </div>
+        </div>
       </div>
-      <div>
-        <label htmlFor="directions" className="text-sm font-medium">
-          Directions
-        </label>
-        <Textarea
-          id="directions"
-          value={formData.directions || ""}
-          onChange={(e) => onChange("directions", e.target.value)}
-          placeholder="Enter any specific directions or instructions to find the property..."
-          className="min-h-[100px]"
-        />
-      </div>
+
       <div className="space-y-2">
         <label htmlFor="airbnb_link" className="text-sm font-medium">
           Airbnb Listing URL
@@ -102,18 +108,7 @@ const ListingBasicFields = ({ formData, onChange }: ListingBasicFieldsProps) => 
           </Button>
         </div>
       </div>
-      <div>
-        <label htmlFor="image_url" className="text-sm font-medium">
-          Image URL
-        </label>
-        <Input
-          id="image_url"
-          value={formData.image_url}
-          onChange={(e) => onChange("image_url", e.target.value)}
-          placeholder="Enter image URL"
-        />
-      </div>
-    </>
+    </div>
   );
 };
 

@@ -15,10 +15,15 @@ export type Database = {
           airbnb_link: string | null
           before_you_leave: string[] | null
           check_in: string
+          check_in_instructions: string | null
           check_in_method: string | null
           check_out: string
           created_at: string | null
           directions: string | null
+          host_about: string | null
+          host_email: string | null
+          host_name: string | null
+          host_phone: string | null
           house_rules: string[] | null
           id: string
           image_url: string | null
@@ -33,10 +38,15 @@ export type Database = {
           airbnb_link?: string | null
           before_you_leave?: string[] | null
           check_in: string
+          check_in_instructions?: string | null
           check_in_method?: string | null
           check_out: string
           created_at?: string | null
           directions?: string | null
+          host_about?: string | null
+          host_email?: string | null
+          host_name?: string | null
+          host_phone?: string | null
           house_rules?: string[] | null
           id?: string
           image_url?: string | null
@@ -51,10 +61,15 @@ export type Database = {
           airbnb_link?: string | null
           before_you_leave?: string[] | null
           check_in?: string
+          check_in_instructions?: string | null
           check_in_method?: string | null
           check_out?: string
           created_at?: string | null
           directions?: string | null
+          host_about?: string | null
+          host_email?: string | null
+          host_name?: string | null
+          host_phone?: string | null
           house_rules?: string[] | null
           id?: string
           image_url?: string | null

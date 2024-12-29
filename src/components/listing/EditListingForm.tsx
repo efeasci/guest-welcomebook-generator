@@ -6,7 +6,9 @@ import { ImagePlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ListingBasicFields from "./ListingBasicFields";
 import ListingCheckInFields from "./ListingCheckInFields";
+import ListingWifiFields from "./ListingWifiFields";
 import ListingRulesFields from "./ListingRulesFields";
+import ListingHostFields from "./ListingHostFields";
 
 interface EditListingFormProps {
   id?: string;
@@ -18,9 +20,15 @@ interface EditListingFormProps {
     check_in: string;
     check_out: string;
     check_in_method: string;
+    check_in_instructions: string;
     house_rules: string[];
     before_you_leave: string[];
     image_url: string;
+    directions: string;
+    host_name: string;
+    host_about: string;
+    host_email: string;
+    host_phone: string;
     user_id?: string;
   };
 }
@@ -60,12 +68,7 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
   };
 
   const handleChange = (field: string, value: any) => {
-    if (field === "house_rules" || field === "before_you_leave") {
-      const arrayValue = value.split("\n").filter((item: string) => item.trim());
-      setFormData(prev => ({ ...prev, [field]: arrayValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
@@ -77,8 +80,12 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
       const listingData = {
         ...formData,
         user_id: user.id,
-        house_rules: formData.house_rules.filter(rule => rule.trim()),
-        before_you_leave: formData.before_you_leave.filter(rule => rule.trim()),
+        house_rules: Array.isArray(formData.house_rules) 
+          ? formData.house_rules 
+          : formData.house_rules.split("\n").filter(rule => rule.trim()),
+        before_you_leave: Array.isArray(formData.before_you_leave)
+          ? formData.before_you_leave
+          : formData.before_you_leave.split("\n").filter(rule => rule.trim()),
       };
 
       const { data, error } = id
@@ -108,7 +115,7 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Listing Image</h2>
@@ -156,8 +163,18 @@ const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
         formData={formData}
         onChange={handleChange}
       />
+
+      <ListingWifiFields
+        formData={formData}
+        onChange={handleChange}
+      />
       
       <ListingRulesFields
+        formData={formData}
+        onChange={handleChange}
+      />
+
+      <ListingHostFields
         formData={formData}
         onChange={handleChange}
       />
