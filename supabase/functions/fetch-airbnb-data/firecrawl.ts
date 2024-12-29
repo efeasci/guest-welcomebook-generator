@@ -2,57 +2,34 @@ import { FIRECRAWL_CONFIG } from './config.ts';
 import { AirbnbData, FirecrawlResponse } from './types.ts';
 
 export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Promise<AirbnbData> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), FIRECRAWL_CONFIG.TIMEOUT);
-
+  console.log('Starting Firecrawl request for URL:', airbnbUrl);
+  
   try {
-    // Validate API key
-    if (!apiKey) {
-      throw new Error('FIRECRAWL_API_KEY is not configured');
-    }
-
-    // Log request details
-    console.log('Starting Firecrawl request for URL:', airbnbUrl);
-    
-    const requestBody = {
-      url: airbnbUrl,
-      limit: 1,
-      wait: true,
-      javascript: true,
-      scrapeOptions: {
-        formats: ['markdown', 'html'],
-        selectors: FIRECRAWL_CONFIG.SELECTORS
-      }
-    };
-
-    console.log('Request configuration:', {
-      url: FIRECRAWL_CONFIG.API_URL,
-      method: 'POST',
-      hasApiKey: !!apiKey,
-      requestBody: JSON.stringify(requestBody, null, 2)
-    });
-    
-    const response = await fetch(FIRECRAWL_CONFIG.API_URL, {
+    const response = await fetch('https://api.firecrawl.co/api/v1/crawl', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'application/json'
       },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
+      body: JSON.stringify({
+        url: airbnbUrl,
+        limit: 1,
+        wait: true,
+        javascript: true,
+        scrapeOptions: {
+          selectors: [
+            { selector: '[data-testid="listing-title"]', name: 'title' },
+            { selector: 'meta[property="og:image"]', name: 'image', attribute: 'content' },
+            { selector: '[data-testid="check-in-time"]', name: 'checkIn' },
+            { selector: '[data-testid="check-out-time"]', name: 'checkOut' },
+            { selector: '[data-testid="house-rules-section"] li', name: 'houseRules' }
+          ]
+        }
+      })
     });
 
-    clearTimeout(timeoutId);
-
-    // Log response details
-    console.log('Firecrawl API response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      headers: Object.fromEntries(response.headers.entries())
-    });
-
+    console.log('Firecrawl API response status:', response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Firecrawl API error response:', {
@@ -64,7 +41,6 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
     }
 
     const crawlResponse = await response.json() as FirecrawlResponse;
-    
     console.log('Crawl response data:', {
       success: !!crawlResponse,
       dataLength: crawlResponse?.data?.length,
@@ -90,7 +66,7 @@ export async function fetchFromFirecrawl(airbnbUrl: string, apiKey: string): Pro
       message: error.message,
       cause: error.cause,
       stack: error.stack,
-      url: FIRECRAWL_CONFIG.API_URL,
+      url: airbnbUrl,
       hasApiKey: !!apiKey
     });
     throw error;
