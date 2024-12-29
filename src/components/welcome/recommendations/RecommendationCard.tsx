@@ -13,8 +13,8 @@ interface RecommendationCardProps {
 }
 
 const RecommendationCard = ({ name, description, address, photo, location }: RecommendationCardProps) => {
-  const getGoogleMapsUrl = (location: { lat: number; lng: number }) => {
-    return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+  const getGoogleMapsUrl = (address: string) => {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
   return (
@@ -37,7 +37,7 @@ const RecommendationCard = ({ name, description, address, photo, location }: Rec
           asChild
         >
           <a
-            href={getGoogleMapsUrl(location)}
+            href={getGoogleMapsUrl(name + " " + address)}
             target="_blank"
             rel="noopener noreferrer"
           >
