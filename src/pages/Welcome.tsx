@@ -44,6 +44,10 @@ const Welcome = () => {
   
   const randomPlaceholder = placeholders[Math.floor(Math.random() * placeholders.length)];
 
+  const getGoogleMapsUrl = (address: string) => {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -59,9 +63,14 @@ const Welcome = () => {
             <CardTitle className="text-3xl font-bold text-center">
               Welcome to {listing.title}
             </CardTitle>
-            <p className="text-center text-muted-foreground flex items-center justify-center gap-2">
+            <a 
+              href={getGoogleMapsUrl(listing.address)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-center text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2"
+            >
               <MapPin className="h-4 w-4" /> {listing.address}
-            </p>
+            </a>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="h-64 w-full mb-6">
