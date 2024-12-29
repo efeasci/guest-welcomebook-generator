@@ -6,7 +6,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -23,66 +22,82 @@ serve(async (req) => {
       throw new Error('FIRECRAWL_API_KEY not configured')
     }
 
-    // Make request to Firecrawl API using fetch with proper error handling
+    // Make request to Firecrawl API
     console.log('Making request to Firecrawl API...')
-    const response = await fetch('https://api.firecrawl.co/api/v1/crawl', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        url: airbnbUrl,
-        limit: 1,
-        scrapeOptions: {
-          formats: ['markdown', 'html']
-        }
-      })
-    })
-
-    console.log('Firecrawl API response status:', response.status)
     
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Firecrawl API error response:', errorText)
-      throw new Error(`Firecrawl API error: ${response.status} - ${errorText}`)
-    }
-
-    const crawlResponse = await response.json()
-    console.log('Crawl response received:', {
-      success: !!crawlResponse,
-      dataLength: crawlResponse?.data?.length
-    })
-
-    if (!crawlResponse.data?.[0]) {
-      throw new Error('No data received from Firecrawl API')
-    }
-
-    const content = crawlResponse.data[0]?.content || ''
-    
-    // Extract data from the crawled content
-    const extractedData = {
-      title: extractTitle(content),
-      image_url: extractImage(content),
-      check_in: extractCheckInTime(content),
-      check_out: extractCheckOutTime(content),
-      check_in_method: extractCheckInMethod(content),
-      house_rules: extractHouseRules(content),
-      before_you_leave: extractBeforeYouLeave(content)
-    }
-
-    console.log('Extracted data:', extractedData)
-
-    return new Response(
-      JSON.stringify(extractedData),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
+    try {
+      const response = await fetch('https://api.firecrawl.co/api/v1/crawl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
         },
-        status: 200 
+        body: JSON.stringify({
+          url: airbnbUrl,
+          limit: 1,
+          scrapeOptions: {
+            formats: ['markdown', 'html']
+          }
+        })
+      })
+
+      console.log('Firecrawl API response status:', response.status)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Firecrawl API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        })
+        throw new Error(`Firecrawl API error: ${response.status} - ${errorText}`)
       }
-    )
+
+      const crawlResponse = await response.json()
+      console.log('Crawl response received:', {
+        success: !!crawlResponse,
+        dataLength: crawlResponse?.data?.length,
+        responseStructure: Object.keys(crawlResponse)
+      })
+
+      if (!crawlResponse.data?.[0]) {
+        throw new Error('No data received from Firecrawl API')
+      }
+
+      const content = crawlResponse.data[0]?.content || ''
+      
+      // Extract data from the crawled content
+      const extractedData = {
+        title: extractTitle(content),
+        image_url: extractImage(content),
+        check_in: extractCheckInTime(content),
+        check_out: extractCheckOutTime(content),
+        check_in_method: extractCheckInMethod(content),
+        house_rules: extractHouseRules(content),
+        before_you_leave: extractBeforeYouLeave(content)
+      }
+
+      console.log('Extracted data:', extractedData)
+
+      return new Response(
+        JSON.stringify(extractedData),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          },
+          status: 200 
+        }
+      )
+
+    } catch (fetchError) {
+      console.error('Fetch error details:', {
+        message: fetchError.message,
+        cause: fetchError.cause,
+        stack: fetchError.stack
+      })
+      throw new Error(`Failed to fetch from Firecrawl API: ${fetchError.message}`)
+    }
 
   } catch (error) {
     console.error('Error in fetch-airbnb-data function:', error)
