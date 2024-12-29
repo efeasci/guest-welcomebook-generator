@@ -23,7 +23,7 @@ interface ListingFormData {
   user_id?: string;
 }
 
-export const useListingForm = (id?: string, initialData: ListingFormData) => {
+export const useListingForm = (initialData: ListingFormData, id?: string) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialData);
   const [newListingId, setNewListingId] = useState<string | null>(null);

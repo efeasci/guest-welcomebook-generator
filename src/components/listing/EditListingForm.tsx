@@ -10,7 +10,6 @@ import { useListingForm } from "./useListingForm";
 import { useNavigate } from "react-router-dom";
 
 interface EditListingFormProps {
-  id?: string;
   initialData: {
     title: string;
     address: string;
@@ -30,11 +29,12 @@ interface EditListingFormProps {
     host_phone: string;
     user_id?: string;
   };
+  id?: string;
 }
 
-const EditListingForm = ({ id, initialData }: EditListingFormProps) => {
+const EditListingForm = ({ initialData, id }: EditListingFormProps) => {
   const navigate = useNavigate();
-  const { formData, handleChange, handleSubmit, currentListingId } = useListingForm(id, initialData);
+  const { formData, handleChange, handleSubmit, currentListingId } = useListingForm(initialData, id);
 
   return (
     <div className="space-y-8">
