@@ -3,6 +3,7 @@ import { Wifi, Clock, MapPin, Book } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import Map from "@/components/Map";
 
 const Welcome = () => {
   const { id } = useParams();
@@ -49,7 +50,7 @@ const Welcome = () => {
         <Card className="max-w-2xl mx-auto shadow-xl overflow-hidden">
           <div className="w-full h-48 relative">
             <img 
-              src={`https://source.unsplash.com/${randomPlaceholder}`}
+              src={listing.image_url || `https://source.unsplash.com/${randomPlaceholder}`}
               alt={listing.title}
               className="w-full h-full object-cover"
             />
@@ -63,6 +64,10 @@ const Welcome = () => {
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
+            <div className="h-64 w-full mb-6">
+              <Map address={listing.address} className="h-full" />
+            </div>
+
             {listing.wifi_password && (
               <section className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
