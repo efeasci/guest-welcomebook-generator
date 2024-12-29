@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/carousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { CheckInPhoto } from "./types";
 
 interface PhotoCarouselProps {
@@ -93,8 +93,12 @@ const PhotoCarousel = ({ photos, onCaptionChange, onDelete, onMove }: PhotoCarou
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious className="absolute -left-12 lg:-left-16 bg-black/50 hover:bg-black/70 text-white !flex" />
-      <CarouselNext className="absolute -right-12 lg:-right-16 bg-black/50 hover:bg-black/70 text-white !flex" />
+      <CarouselPrevious className="absolute -left-12 lg:-left-16 bg-black/70 hover:bg-black/90 text-white !flex h-12 w-12">
+        <ChevronLeft className="h-8 w-8" />
+      </CarouselPrevious>
+      <CarouselNext className="absolute -right-12 lg:-right-16 bg-black/70 hover:bg-black/90 text-white !flex h-12 w-12">
+        <ChevronRight className="h-8 w-8" />
+      </CarouselNext>
     </Carousel>
   );
 };
