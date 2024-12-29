@@ -32,18 +32,21 @@ const AddRecommendationDialog = ({
     }
 
     try {
+      const location = selectedPlace.geometry?.location;
       const newRecommendation = {
         listing_id: listingId,
-        name: selectedPlace.name,
+        name: selectedPlace.name || '',
         description: description,
-        address: selectedPlace.formatted_address,
+        address: selectedPlace.formatted_address || '',
         photo: selectedPlace.photos?.[0]?.getUrl(),
         location: {
-          lat: selectedPlace.geometry?.location?.lat(),
-          lng: selectedPlace.geometry?.location?.lng()
+          lat: location?.lat(),
+          lng: location?.lng()
         },
         category: category
       };
+
+      console.log('Adding recommendation:', newRecommendation);
 
       const { error } = await supabase
         .from('listing_recommendations')
@@ -64,8 +67,11 @@ const AddRecommendationDialog = ({
   };
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    console.log('Selected place:', place);
+    console.log('Selected place in dialog:', place);
     setSelectedPlace(place);
+    if (place.name) {
+      setSearchInput(place.name);
+    }
   };
 
   return (

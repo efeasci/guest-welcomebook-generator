@@ -31,6 +31,7 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
             initPlacesAutocomplete();
           };
         } else {
+          console.log('Google Maps already loaded');
           initPlacesAutocomplete();
         }
       } catch (error) {
@@ -43,12 +44,15 @@ const PlaceSearch = ({ onPlaceSelect, value, onChange }: PlaceSearchProps) => {
 
       const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
         types: ['establishment'],
+        fields: ['name', 'formatted_address', 'place_id', 'geometry', 'photos']
       });
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
+        console.log('Selected place:', place);
+        
         if (place.name) {
-          onChange(place.name); // Update the input value with the selected place name
+          onChange(place.name);
           onPlaceSelect(place);
         }
       });
