@@ -10,6 +10,7 @@ import WifiSection from "@/components/welcome/WifiSection";
 import RulesSection from "@/components/welcome/RulesSection";
 import LeaveSection from "@/components/welcome/LeaveSection";
 import HostSection from "@/components/welcome/HostSection";
+import RecommendationsSection from "@/components/welcome/RecommendationsSection";
 
 const Welcome = () => {
   const { id } = useParams();
@@ -61,7 +62,6 @@ const Welcome = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto shadow-xl overflow-hidden">
-          {/* Image and Title */}
           <TitleSection
             title={listing.title}
             address={listing.address}
@@ -71,16 +71,13 @@ const Welcome = () => {
           />
 
           <CardContent className="space-y-8">
-            {/* Location with Map */}
             <LocationSection
               address={listing.address}
               getDirectionsUrl={getDirectionsUrl}
             />
 
-            {/* Directions */}
             <DirectionsSection directions={listing.directions} />
 
-            {/* Check-in Information */}
             <CheckInSection
               checkIn={listing.check_in}
               checkOut={listing.check_out}
@@ -88,19 +85,17 @@ const Welcome = () => {
               checkInInstructions={listing.check_in_instructions}
             />
 
-            {/* WiFi Information */}
             <WifiSection
               wifiNetwork={listing.wifi_network}
               wifiPassword={listing.wifi_password}
             />
 
-            {/* House Rules */}
             <RulesSection rules={listing.house_rules} />
 
-            {/* Before You Leave */}
             <LeaveSection instructions={listing.before_you_leave} />
 
-            {/* Host Information */}
+            <RecommendationsSection address={listing.address} />
+
             <HostSection
               name={listing.host_name}
               about={listing.host_about}
