@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogIn, Plus } from "lucide-react";
+import { LogIn, Plus, LayoutDashboard } from "lucide-react";
 
 const TopNav = () => {
   const navigate = useNavigate();
@@ -14,23 +14,41 @@ const TopNav = () => {
           Welcome Wizard
         </div>
         
-        {!user && (
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/login")}
-            >
-              <LogIn className="mr-2 h-4 w-4" />
-              Log In
-            </Button>
-            <Button
-              onClick={() => navigate("/edit")}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Get Started
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          {user ? (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/dashboard")}
+              >
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                Dashboard
+              </Button>
+              <Button
+                onClick={() => navigate("/edit")}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Listing
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/login")}
+              >
+                <LogIn className="mr-2 h-4 w-4" />
+                Log In
+              </Button>
+              <Button
+                onClick={() => navigate("/edit")}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Get Started
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
