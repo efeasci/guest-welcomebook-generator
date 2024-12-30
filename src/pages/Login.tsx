@@ -61,7 +61,7 @@ export default function Login() {
               }
             }
           }}
-          providers={[]}
+          providers={["google"]}
           redirectTo={window.location.origin}
         />
       </div>
