@@ -9,6 +9,7 @@ import RecommendationsManager from "./RecommendationsManager";
 import CheckInPhotosManager from "./CheckInPhotosManager";
 import { useListingForm } from "./useListingForm";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/App";
 
 interface EditListingFormProps {
   initialData: {
@@ -31,11 +32,21 @@ interface EditListingFormProps {
     user_id?: string;
   };
   id?: string;
+  onAnonymousSubmit?: () => void;
 }
 
-const EditListingForm = ({ initialData, id }: EditListingFormProps) => {
+const EditListingForm = ({ initialData, id, onAnonymousSubmit }: EditListingFormProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { formData, handleChange, handleSubmit, currentListingId } = useListingForm(initialData, id);
+
+  const onSubmit = () => {
+    if (!user && onAnonymousSubmit) {
+      onAnonymousSubmit();
+      return;
+    }
+    handleSubmit();
+  };
 
   return (
     <div className="space-y-8">
@@ -85,7 +96,7 @@ const EditListingForm = ({ initialData, id }: EditListingFormProps) => {
         <Button variant="outline" onClick={() => navigate("/")}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit}>
+        <Button onClick={onSubmit}>
           {id ? "Save Changes" : "Create Listing"}
         </Button>
       </div>

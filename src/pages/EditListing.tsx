@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import EditListingForm from "@/components/listing/EditListingForm";
 import { useAuth } from "@/App";
+import { toast } from "sonner";
 
 export default function EditListing() {
   const { id } = useParams();
@@ -22,8 +23,17 @@ export default function EditListing() {
       if (error) throw error;
       return data;
     },
-    enabled: !!id, // Only run query if we have an ID
+    enabled: !!id,
   });
+
+  const handleAnonymousSubmit = () => {
+    toast.error("Please create an account to save your listing", {
+      action: {
+        label: "Sign Up",
+        onClick: () => navigate("/login"),
+      },
+    });
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -52,9 +62,13 @@ export default function EditListing() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
+    <div className="container mx-auto p-4 max-w-2xl pt-24">
       <h1 className="text-2xl font-bold mb-6">{id ? "Edit Listing" : "Add New Listing"}</h1>
-      <EditListingForm id={id} initialData={initialData} />
+      <EditListingForm 
+        id={id} 
+        initialData={initialData} 
+        onAnonymousSubmit={handleAnonymousSubmit}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import Landing from "./pages/Landing";
 import EditListing from "./pages/EditListing";
 import { supabase } from "./integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import TopNav from "./components/TopNav";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
+  return children;
+};
+
+// Semi-protected route that allows access but redirects to login when trying to save
+const SemiProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return children;
 };
 
@@ -58,6 +64,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <TopNav />
             <Routes>
               <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
               <Route
@@ -76,9 +83,9 @@ const App = () => {
               <Route
                 path="/edit/:id?"
                 element={
-                  <ProtectedRoute>
+                  <SemiProtectedRoute>
                     <EditListing />
-                  </ProtectedRoute>
+                  </SemiProtectedRoute>
                 }
               />
             </Routes>
