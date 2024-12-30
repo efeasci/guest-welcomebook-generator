@@ -50,7 +50,11 @@ const App = () => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth event:", event);
+      if (event === 'SIGNED_OUT') {
+        window.location.href = '/';
+      }
       setUser(session?.user ?? null);
     });
 

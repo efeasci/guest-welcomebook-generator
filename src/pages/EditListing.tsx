@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import EditListingForm from "@/components/listing/EditListingForm";
@@ -9,6 +9,8 @@ export default function EditListing() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const draftListing = location.state?.draftListing;
 
   const { isLoading, data: listing } = useQuery({
     queryKey: ["listing", id],
@@ -26,12 +28,12 @@ export default function EditListing() {
     enabled: !!id,
   });
 
-  const handleAnonymousSubmit = () => {
-    toast.error("Please create an account to save your listing", {
-      action: {
-        label: "Sign Up",
-        onClick: () => navigate("/login"),
-      },
+  const handleAnonymousSubmit = (formData: any) => {
+    navigate("/login", {
+      state: {
+        message: "Log In to create your first listing",
+        draftListing: formData
+      }
     });
   };
 
@@ -39,8 +41,8 @@ export default function EditListing() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Provide default values for all required fields
-  const initialData = listing || {
+  // Use draft listing data if available, otherwise use listing data or default values
+  const initialData = draftListing || listing || {
     title: "",
     address: "",
     wifi_password: "",
