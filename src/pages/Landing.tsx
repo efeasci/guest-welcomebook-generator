@@ -1,9 +1,45 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Star, Users, Layout } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simple check to ensure auth state is loaded
+    console.log("Landing: Checking auth state");
+    const checkAuth = async () => {
+      try {
+        setIsLoading(true);
+        // If user is already authenticated, redirect to dashboard
+        if (user) {
+          console.log("Landing: User found, redirecting to dashboard");
+          navigate('/dashboard');
+          return;
+        }
+      } finally {
+        console.log("Landing: Initial load complete");
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [user, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
