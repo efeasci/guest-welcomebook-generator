@@ -23,9 +23,14 @@ interface ListingFormData {
   user_id?: string;
 }
 
+const DEFAULT_LISTING_IMAGE = "/lovable-uploads/d84dafa0-a313-48d6-8f0e-49bf9a103ba9.png";
+
 export const useListingForm = (initialData: ListingFormData, id?: string) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState(initialData);
+  const [formData, setFormData] = useState({
+    ...initialData,
+    image_url: initialData.image_url || DEFAULT_LISTING_IMAGE
+  });
   const [newListingId, setNewListingId] = useState<string | null>(null);
 
   const handleChange = (field: string, value: any) => {
@@ -82,6 +87,7 @@ export const useListingForm = (initialData: ListingFormData, id?: string) => {
           console.log("New listing created:", data);
           setNewListingId(data.id);
           toast.success("Listing created successfully");
+          navigate("/");
         }
       }
     } catch (error) {
