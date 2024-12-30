@@ -13,6 +13,14 @@ const TopNav = () => {
   const handleSignOut = async () => {
     try {
       console.log("Signing out from TopNav...");
+      // First check if we have a session
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        console.log("No active session found, redirecting to login...");
+        navigate('/login');
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error signing out:", error);
@@ -21,6 +29,13 @@ const TopNav = () => {
           description: "Failed to sign out",
           variant: "destructive",
         });
+      } else {
+        console.log("Successfully signed out");
+        toast({
+          title: "Success",
+          description: "You have been signed out",
+        });
+        navigate('/login');
       }
     } catch (error) {
       console.error("Error in sign out:", error);
