@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { transformListingData } from "./utils/listingDataTransform";
+import { submitListing } from "./utils/listingSubmission";
 
 interface ListingFormData {
   title: string;
@@ -39,57 +41,18 @@ export const useListingForm = (initialData: ListingFormData, id?: string) => {
 
   const handleSubmit = async () => {
     try {
-      console.log("Submitting form data:", formData);
-      
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error("No user found");
 
-      const listingData = {
-        ...formData,
-        user_id: user.id,
-        house_rules: Array.isArray(formData.house_rules) 
-          ? formData.house_rules 
-          : typeof formData.house_rules === 'string'
-            ? formData.house_rules.split('\n').filter(rule => rule.trim())
-            : [],
-        before_you_leave: Array.isArray(formData.before_you_leave)
-          ? formData.before_you_leave
-          : typeof formData.before_you_leave === 'string'
-            ? formData.before_you_leave.split('\n').filter(instruction => instruction.trim())
-            : []
-      };
-
-      console.log("Prepared listing data:", listingData);
-
-      if (id) {
-        // Update existing listing
-        const { error } = await supabase
-          .from("listings")
-          .update(listingData)
-          .eq("id", id);
-
-        if (error) throw error;
-        
-        toast.success("Listing updated successfully");
-        navigate("/");
-      } else {
-        // Create new listing
-        const { data, error } = await supabase
-          .from("listings")
-          .insert(listingData)
-          .select()
-          .single();
-
-        if (error) throw error;
-        
-        if (data) {
-          console.log("New listing created:", data);
-          setNewListingId(data.id);
-          toast.success("Listing created successfully");
-          navigate("/");
-        }
+      const listingData = transformListingData(formData, user.id);
+      const newId = await submitListing(listingData, id);
+      
+      if (newId) {
+        setNewListingId(newId);
       }
+      
+      navigate("/");
     } catch (error) {
       console.error("Error saving listing:", error);
       toast.error(id ? "Failed to update listing" : "Failed to create listing");
