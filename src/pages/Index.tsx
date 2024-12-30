@@ -81,28 +81,6 @@ export default function Index() {
     fetchData();
   }, [user, navigate, uiToast]);
 
-  const handleSignOut = async () => {
-    try {
-      console.log("Signing out from Index...");
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Error signing out:", error);
-        uiToast({
-          title: "Error",
-          description: "Failed to sign out",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error in sign out:", error);
-      uiToast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleDelete = async (listingId: string) => {
     try {
       const { error } = await supabase
@@ -137,7 +115,6 @@ export default function Index() {
         profile={profile}
         userEmail={user?.email}
         onAddListing={() => navigate('/edit')}
-        onSignOut={handleSignOut}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
