@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/App";
+import { useAuth } from "@/contexts/AuthContext";
 import { LogIn, Plus } from "lucide-react";
 
 const TopNav = () => {

@@ -9,7 +9,7 @@ import RecommendationsManager from "./RecommendationsManager";
 import CheckInPhotosManager from "./CheckInPhotosManager";
 import { useListingForm } from "./useListingForm";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/App";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EditListingFormProps {
   initialData: {

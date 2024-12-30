@@ -2,7 +2,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import EditListingForm from "@/components/listing/EditListingForm";
-import { useAuth } from "@/App";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 export default function EditListing() {
