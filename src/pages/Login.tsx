@@ -44,6 +44,9 @@ export default function Login() {
     };
   }, [user, navigate, toast]);
 
+  const redirectUrl = window.location.origin + window.location.pathname;
+  console.log("Redirect URL:", redirectUrl);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-lg">
@@ -62,7 +65,7 @@ export default function Login() {
             }
           }}
           providers={["google"]}
-          redirectTo={window.location.origin}
+          redirectTo={redirectUrl}
         />
       </div>
     </div>
