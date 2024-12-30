@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { createContext, useContext, useEffect, useState } from "react";
 import Index from "./pages/Index";
 import Welcome from "./pages/Welcome";
@@ -38,8 +38,10 @@ const SemiProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return children;
 };
 
-const App = () => {
+// Create a wrapper component to handle auth state
+const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check initial auth state
@@ -53,24 +55,32 @@ const App = () => {
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth event:", event);
       if (event === 'SIGNED_OUT') {
-        window.location.href = '/';
+        navigate('/', { replace: true });
       }
       setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   return (
+    <AuthContext.Provider value={{ user }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+const App = () => {
+  return (
     <QueryClientProvider client={queryClient}>
-      <AuthContext.Provider value={{ user }}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthWrapper>
             <TopNav />
             <Routes>
-              <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
+              <Route path="/" element={<Landing />} />
               <Route
                 path="/dashboard"
                 element={
@@ -93,9 +103,9 @@ const App = () => {
                 }
               />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthContext.Provider>
+          </AuthWrapper>
+        </BrowserRouter>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 };
