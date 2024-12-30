@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tables } from "@/integrations/supabase/types";
@@ -82,15 +82,24 @@ export default function Index() {
   }, [user, navigate, uiToast]);
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      console.log("Signing out...");
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error signing out:", error);
+        uiToast({
+          title: "Error",
+          description: "Failed to sign out",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error in sign out:", error);
       uiToast({
         title: "Error",
-        description: "Failed to sign out",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
-    } else {
-      navigate("/login");
     }
   };
 

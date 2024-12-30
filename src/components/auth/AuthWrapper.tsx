@@ -20,9 +20,11 @@ export const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth event:", event);
       if (event === 'SIGNED_OUT') {
-        navigate('/', { replace: true });
+        setUser(null);
+        navigate('/login');
+      } else {
+        setUser(session?.user ?? null);
       }
-      setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
