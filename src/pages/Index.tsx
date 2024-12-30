@@ -83,7 +83,7 @@ export default function Index() {
 
   const handleSignOut = async () => {
     try {
-      console.log("Signing out...");
+      console.log("Signing out from Index...");
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error signing out:", error);

@@ -21,7 +21,10 @@ export const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth event:", event);
       if (event === 'SIGNED_OUT') {
         setUser(null);
-        navigate('/login');
+        navigate('/login', { replace: true });
+      } else if (event === 'SIGNED_IN') {
+        setUser(session?.user);
+        navigate('/', { replace: true });
       } else {
         setUser(session?.user ?? null);
       }
