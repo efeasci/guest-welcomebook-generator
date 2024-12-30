@@ -25,47 +25,61 @@ export default function Index() {
   const { toast: uiToast } = useToast();
   const [listings, setListings] = useState<Tables<"listings">[]>([]);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      // Fetch user's listings
-      const fetchListings = async () => {
-        const { data, error } = await supabase
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        if (!user) {
+          console.log('No user found, redirecting to login');
+          navigate('/login');
+          return;
+        }
+
+        console.log('Fetching data for user:', user.id);
+
+        // Fetch user's listings
+        const { data: listingsData, error: listingsError } = await supabase
           .from("listings")
           .select("*")
           .eq("user_id", user.id);
 
-        if (error) {
-          console.error("Error fetching listings:", error);
+        if (listingsError) {
+          console.error("Error fetching listings:", listingsError);
           uiToast({
             title: "Error",
             description: "Failed to fetch listings",
             variant: "destructive",
           });
-        } else {
-          setListings(data);
+          return;
         }
-      };
 
-      // Fetch user's profile
-      const fetchProfile = async () => {
-        const { data, error } = await supabase
+        console.log('Fetched listings:', listingsData?.length);
+        setListings(listingsData || []);
+
+        // Fetch user's profile
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", user.id)
           .single();
 
-        if (error) {
-          console.error("Error fetching profile:", error);
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
         } else {
-          setProfile(data);
+          console.log('Fetched profile:', profileData);
+          setProfile(profileData);
         }
-      };
+      } catch (error) {
+        console.error("Error in data fetching:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      fetchListings();
-      fetchProfile();
-    }
-  }, [user, uiToast]);
+    fetchData();
+  }, [user, navigate, uiToast]);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -97,8 +111,19 @@ export default function Index() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-4 mt-16 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-4 mt-16"> {/* Added mt-16 for top margin */}
+    <div className="container mx-auto p-4 mt-16">
       <DashboardHeader 
         profile={profile}
         userEmail={user?.email}
