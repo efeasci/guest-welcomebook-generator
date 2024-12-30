@@ -98,7 +98,7 @@ export default function Index() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 mt-16"> {/* Added mt-16 for top margin */}
       <DashboardHeader 
         profile={profile}
         userEmail={user?.email}
