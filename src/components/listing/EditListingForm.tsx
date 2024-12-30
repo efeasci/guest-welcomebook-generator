@@ -32,7 +32,7 @@ interface EditListingFormProps {
     user_id?: string;
   };
   id?: string;
-  onAnonymousSubmit?: () => void;
+  onAnonymousSubmit?: (formData: any) => void;
 }
 
 const EditListingForm = ({ initialData, id, onAnonymousSubmit }: EditListingFormProps) => {
@@ -42,7 +42,7 @@ const EditListingForm = ({ initialData, id, onAnonymousSubmit }: EditListingForm
 
   const onSubmit = () => {
     if (!user && onAnonymousSubmit) {
-      onAnonymousSubmit();
+      onAnonymousSubmit(formData);
       return;
     }
     handleSubmit();
