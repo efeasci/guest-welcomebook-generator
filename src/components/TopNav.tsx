@@ -1,14 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogIn, Plus, LayoutDashboard } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const TopNav = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const isDashboard = location.pathname === '/dashboard';
 
   const handleSignOut = async () => {
     try {
@@ -57,19 +59,13 @@ const TopNav = () => {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/dashboard")}
-              >
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Dashboard
-              </Button>
-              <Button
-                onClick={() => navigate("/edit")}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                New Listing
-              </Button>
+              {!isDashboard && (
+                <Button
+                  onClick={() => navigate("/edit")}
+                >
+                  New Listing
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={handleSignOut}
@@ -89,7 +85,6 @@ const TopNav = () => {
               <Button
                 onClick={() => navigate("/login")}
               >
-                <Plus className="mr-2 h-4 w-4" />
                 Get Started
               </Button>
             </>

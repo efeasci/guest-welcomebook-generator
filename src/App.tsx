@@ -11,8 +11,44 @@ import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import EditListing from "./pages/EditListing";
 import TopNav from "./components/TopNav";
+import { useLocation } from "react-router-dom";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const location = useLocation();
+  const isWelcomePage = location.pathname.startsWith('/welcome/');
+
+  return (
+    <AuthWrapper>
+      {!isWelcomePage && <TopNav />}
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/welcome/:id"
+          element={<Welcome />}
+        />
+        <Route
+          path="/edit/:id?"
+          element={
+            <SemiProtectedRoute>
+              <EditListing />
+            </SemiProtectedRoute>
+          }
+        />
+      </Routes>
+    </AuthWrapper>
+  );
+};
 
 const App = () => {
   return (
@@ -21,33 +57,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthWrapper>
-            <TopNav />
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/welcome/:id"
-                element={<Welcome />}
-              />
-              <Route
-                path="/edit/:id?"
-                element={
-                  <SemiProtectedRoute>
-                    <EditListing />
-                  </SemiProtectedRoute>
-                }
-              />
-            </Routes>
-          </AuthWrapper>
+          <AppContent />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
