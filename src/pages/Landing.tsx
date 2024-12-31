@@ -54,7 +54,7 @@ export default function Landing() {
           </p>
           <Button 
             size="lg" 
-            onClick={() => navigate("/edit")}
+            onClick={() => navigate("/login")}
             className="gap-2"
           >
             Get Started <ArrowRight className="h-4 w-4" />
@@ -110,7 +110,7 @@ export default function Landing() {
           <div className="flex gap-4 justify-center">
             <Button
               size="lg"
-              onClick={() => navigate("/edit")}
+              onClick={() => navigate("/login")}
             >
               Get Started
             </Button>
