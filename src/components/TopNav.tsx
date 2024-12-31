@@ -87,7 +87,7 @@ const TopNav = () => {
                 Log In
               </Button>
               <Button
-                onClick={() => navigate("/edit")}
+                onClick={() => navigate("/login")}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Get Started
