@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   
   if (!user) {
@@ -10,6 +10,8 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   return children;
 };
+
+export default ProtectedRoute;
 
 export const SemiProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return children;

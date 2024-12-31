@@ -26,7 +26,9 @@ function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <AuthWrapper />
+                  <AuthWrapper>
+                    <Landing />
+                  </AuthWrapper>
                 </ProtectedRoute>
               }
             />
