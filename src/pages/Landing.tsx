@@ -66,7 +66,7 @@ export default function Landing() {
       <section className="py-16 bg-secondary/50">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Why Choose Welcome Wizard?</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center p-6">
               <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Layout className="h-6 w-6 text-primary" />
@@ -93,6 +93,15 @@ export default function Landing() {
               <p className="text-muted-foreground">
                 Provide a stress-free check-in experience for your guests
               </p>
+              <div className="text-center p-6">
+                <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">AI Generated Local Guides</h3>
+                <p className="text-muted-foreground">
+                  Create local guides for your guests in seconds
+                </p>
+              </div>
             </div>
           </div>
         </div>
