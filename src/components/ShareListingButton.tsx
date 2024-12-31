@@ -24,7 +24,14 @@ const ShareListingButton = ({ welcomePageUrl, listingTitle }: ShareListingButton
       }
     } catch (error) {
       console.error("Error sharing:", error);
-      toast.error("Failed to share");
+      // Fallback to clipboard copy if share fails
+      try {
+        await navigator.clipboard.writeText(welcomePageUrl);
+        toast.success("Link copied to clipboard!");
+      } catch (clipboardError) {
+        console.error("Error copying to clipboard:", clipboardError);
+        toast.error("Failed to share");
+      }
     }
   };
 
