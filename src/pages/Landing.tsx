@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Star, Users, Layout } from "lucide-react";
+import { ArrowRight, Star, Users, Layout, Sparkle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 
@@ -93,15 +93,15 @@ export default function Landing() {
               <p className="text-muted-foreground">
                 Provide a stress-free check-in experience for your guests
               </p>
-              <div className="text-center p-6">
-                <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">AI Generated Local Guides</h3>
-                <p className="text-muted-foreground">
-                  Create local guides for your guests in seconds
-                </p>
+            </div>
+            <div className="text-center p-6">
+              <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkle className="h-6 w-6 text-primary" />
               </div>
+              <h3 className="text-xl font-semibold mb-2">AI Generated Local Guides</h3>
+              <p className="text-muted-foreground">
+                Create local guides for your guests in seconds
+              </p>
             </div>
           </div>
         </div>
