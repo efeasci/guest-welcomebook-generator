@@ -89,9 +89,12 @@ const ListingCard = ({ listing, onEdit, onPreview }: ListingCardProps) => {
           />
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" className="flex-1">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
