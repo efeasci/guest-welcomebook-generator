@@ -12,43 +12,49 @@ const getCategoryConfig = (category: string) => {
     case "Places to Eat":
       return {
         type: "restaurant",
-        radius: 3200,
-        minRating: 4,
+        radius: 1600, // 1 mile = 1600 meters
+        minRating: 4.0,
+        limit: 5,
         description: "restaurants"
       };
     case "Coffee Shops":
       return {
         type: "cafe",
-        radius: 3200,
-        minRating: 4,
+        radius: 1600, // 1 mile
+        minRating: 4.0,
+        limit: 5,
         description: "cafes and coffee shops"
       };
     case "Bars & Wineries":
       return {
-        type: "bar",
-        radius: 3200,
-        minRating: 4,
+        type: ["bar", "night_club"],
+        radius: 1600, // 1 mile
+        minRating: 4.0,
+        limit: 5,
         description: "bars and pubs"
       };
     case "Nearest Shopping":
       return {
-        type: "supermarket",
-        radius: 1600,
-        minRating: 3,
+        type: ["supermarket", "grocery_or_supermarket"],
+        radius: 800, // 0.5 mile
+        minRating: 3.0, // Less strict rating for essential services
+        limit: 5,
         description: "grocery stores and supermarkets"
       };
     case "Things to Do":
       return {
-        type: "tourist_attraction",
-        radius: 8000,
-        minRating: 4,
+        type: ["tourist_attraction", "point_of_interest"],
+        radius: 24000, // City-wide radius (15 miles)
+        minRating: 4.0,
+        limit: 5,
         description: "attractions and activities"
       };
     default:
       return {
         type: "point_of_interest",
-        radius: 3200,
-        minRating: 4,
+        radius: 1600,
+        minRating: 4.0,
+        limit: 5,
         description: "places"
       };
   }
@@ -86,22 +92,24 @@ serve(async (req) => {
     console.log('Geocoded location:', { lat, lng });
     
     // Search for places using the Places API
-    const placesResponse = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${config.radius}&type=${config.type}&minrating=${config.minRating}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+    const types = Array.isArray(config.type) ? config.type : [config.type];
+    const placesPromises = types.map(type => 
+      fetch(
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${config.radius}&type=${type}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`
+      ).then(res => res.json())
     );
-    const placesData = await placesResponse.json();
     
-    if (!placesData.results) {
-      throw new Error('No places found');
-    }
+    const placesResults = await Promise.all(placesPromises);
+    const allPlaces = placesResults.flatMap(result => result.results || []);
     
     // Filter and sort places by rating
-    const topPlaces = placesData.results
+    const uniquePlaces = Array.from(new Map(allPlaces.map(place => [place.place_id, place])).values());
+    const topPlaces = uniquePlaces
       .filter((place: any) => place.rating >= config.minRating)
       .sort((a: any, b: any) => b.rating - a.rating)
-      .slice(0, 5);
+      .slice(0, config.limit);
     
-    console.log('Found top places:', topPlaces.length);
+    console.log(`Found ${topPlaces.length} places matching criteria for ${category}`);
     
     // Get more details for each place including the editorial summary
     const detailedPlaces = await Promise.all(
