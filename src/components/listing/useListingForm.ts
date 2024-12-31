@@ -28,7 +28,6 @@ interface ListingFormData {
 const DEFAULT_LISTING_IMAGE = "/lovable-uploads/d84dafa0-a313-48d6-8f0e-49bf9a103ba9.png";
 
 export const useListingForm = (initialData: ListingFormData, id?: string) => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     ...initialData,
     image_url: initialData.image_url || DEFAULT_LISTING_IMAGE
@@ -50,12 +49,14 @@ export const useListingForm = (initialData: ListingFormData, id?: string) => {
       
       if (newId) {
         setNewListingId(newId);
+        return newId;
       }
       
-      navigate("/");
+      return id;
     } catch (error) {
       console.error("Error saving listing:", error);
       toast.error(id ? "Failed to update listing" : "Failed to create listing");
+      return null;
     }
   };
 

@@ -1,110 +1,66 @@
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tables } from "@/integrations/supabase/types";
-import { Eye, Trash2 } from "lucide-react";
-import ShareListingButton from "@/components/ShareListingButton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { Eye, Link as LinkIcon, Pencil } from "lucide-react";
+import { Link } from "react-router-dom";
+import ShareListingButton from "../ShareListingButton";
 
 interface ListingCardProps {
-  listing: Tables<"listings">;
-  placeholderImage: string;
-  onEdit: (listing: Tables<"listings">) => void;
-  onDelete: (listingId: string) => void;
+  listing: {
+    id: string;
+    title: string;
+    address: string;
+    image_url?: string;
+  };
+  onEdit?: () => void;
+  onPreview?: () => void;
 }
 
-export default function ListingCard({ listing, placeholderImage, onEdit, onDelete }: ListingCardProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+const ListingCard = ({ listing, onEdit, onPreview }: ListingCardProps) => {
+  const welcomePageUrl = `${window.location.origin}/welcome/${listing.id}`;
 
-  const handlePreview = () => {
-    window.open(`/welcome/${listing.id}`, '_blank');
-  };
-
-  const handleDelete = () => {
-    onDelete(listing.id);
-    setShowDeleteDialog(false);
-  };
+  console.log("Generated welcome page URL:", welcomePageUrl);
 
   return (
-    <>
-      <Card className="overflow-hidden">
-        <div className="w-full h-48 relative">
-          {listing.image_url ? (
-            <img 
-              src={listing.image_url}
-              alt={listing.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <img 
-              src={`https://source.unsplash.com/${placeholderImage}`}
-              alt={listing.title}
-              className="w-full h-full object-cover"
-            />
-          )}
+    <Card className="overflow-hidden">
+      <div className="aspect-video relative">
+        <img
+          src={listing.image_url || "/placeholder.svg"}
+          alt={listing.title}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <CardContent className="p-4">
+        <h3 className="font-semibold mb-2">{listing.title}</h3>
+        <p className="text-sm text-muted-foreground mb-4">{listing.address}</p>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEdit}
+            className="flex-1"
+          >
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="flex-1"
+          >
+            <Link to={`/welcome/${listing.id}`} target="_blank">
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Link>
+          </Button>
+          <ShareListingButton 
+            welcomePageUrl={welcomePageUrl}
+            listingTitle={listing.title}
+          />
         </div>
-        <div className="p-6">
-          <h2 className="text-xl font-semibold mb-2">{listing.title}</h2>
-          <p className="text-gray-600 mb-4 line-clamp-2 min-h-[3rem]">{listing.address}</p>
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm">Check-in: {listing.check_in}</p>
-              <p className="text-sm">Check-out: {listing.check_out}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline"
-                onClick={() => onEdit(listing)}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handlePreview}
-                title="Preview listing"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <ShareListingButton listingId={listing.id} />
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the listing
-              "{listing.title}" and remove all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default ListingCard;

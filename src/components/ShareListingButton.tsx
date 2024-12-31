@@ -1,45 +1,42 @@
+import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
-import { Button } from "./ui/button";
 import { toast } from "sonner";
 
 interface ShareListingButtonProps {
-  listingId: string;
+  welcomePageUrl: string;
+  listingTitle: string;
 }
 
-const ShareListingButton = ({ listingId }: ShareListingButtonProps) => {
+const ShareListingButton = ({ welcomePageUrl, listingTitle }: ShareListingButtonProps) => {
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/welcome/${listingId}`;
+    console.log("Sharing listing:", welcomePageUrl);
     
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share({
-          title: "Check out this listing",
-          url: shareUrl,
+          title: `Welcome to ${listingTitle}`,
+          url: welcomePageUrl,
         });
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          copyToClipboard(shareUrl);
-        }
+        toast.success("Shared successfully!");
+      } else {
+        await navigator.clipboard.writeText(welcomePageUrl);
+        toast.success("Link copied to clipboard!");
       }
-    } else {
-      copyToClipboard(shareUrl);
+    } catch (error) {
+      console.error("Error sharing:", error);
+      toast.error("Failed to share");
     }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      toast("Link copied to clipboard!");
-    });
   };
 
   return (
     <Button
       variant="outline"
-      size="icon"
+      size="sm"
       onClick={handleShare}
-      className="ml-2"
+      className="flex-1"
     >
-      <Share2 className="h-4 w-4" />
+      <Share2 className="h-4 w-4 mr-2" />
+      Share
     </Button>
   );
 };

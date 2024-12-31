@@ -37,11 +37,17 @@ export default function EditListing() {
     });
   };
 
+  const handleSuccess = (listingId: string) => {
+    const welcomePageUrl = `${window.location.origin}/welcome/${listingId}`;
+    console.log("New listing created, welcome page URL:", welcomePageUrl);
+    toast.success("Listing created! Share the welcome page with your guests.");
+    navigate("/dashboard");
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Use draft listing data if available, otherwise use listing data or default values
   const initialData = draftListing || listing || {
     title: "",
     address: "",
@@ -70,6 +76,7 @@ export default function EditListing() {
         id={id} 
         initialData={initialData} 
         onAnonymousSubmit={handleAnonymousSubmit}
+        onSuccess={handleSuccess}
       />
     </div>
   );

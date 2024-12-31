@@ -33,19 +33,23 @@ interface EditListingFormProps {
   };
   id?: string;
   onAnonymousSubmit?: (formData: any) => void;
+  onSuccess?: (listingId: string) => void;
 }
 
-const EditListingForm = ({ initialData, id, onAnonymousSubmit }: EditListingFormProps) => {
+const EditListingForm = ({ initialData, id, onAnonymousSubmit, onSuccess }: EditListingFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { formData, handleChange, handleSubmit, currentListingId } = useListingForm(initialData, id);
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     if (!user && onAnonymousSubmit) {
       onAnonymousSubmit(formData);
       return;
     }
-    handleSubmit();
+    const listingId = await handleSubmit();
+    if (listingId && onSuccess) {
+      onSuccess(listingId);
+    }
   };
 
   return (
