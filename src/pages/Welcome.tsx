@@ -6,26 +6,48 @@ import WelcomeCard from "./welcome/WelcomeCard";
 const Welcome = () => {
   const { id } = useParams();
   
-  const { data: listing, isLoading } = useQuery({
+  const { data: listing, isLoading, error } = useQuery({
     queryKey: ['listing', id],
     queryFn: async () => {
+      console.log("Fetching listing with ID:", id);
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('id', id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching listing:", error);
+        throw error;
+      }
+      
+      console.log("Fetched listing:", data);
       return data;
     },
   });
 
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading welcome page...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!listing) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Listing not found</div>;
+  if (error || !listing) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Welcome Page Not Found</h2>
+          <p className="text-gray-600">
+            The welcome page you're looking for doesn't exist or has been removed.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const placeholders = [

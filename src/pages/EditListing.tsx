@@ -40,7 +40,29 @@ export default function EditListing() {
   const handleSuccess = (listingId: string) => {
     const welcomePageUrl = `${window.location.origin}/welcome/${listingId}`;
     console.log("New listing created, welcome page URL:", welcomePageUrl);
-    toast.success("Listing created! Share the welcome page with your guests.");
+    
+    // Verify the welcome page exists by checking the listing
+    supabase
+      .from("listings")
+      .select("id")
+      .eq("id", listingId)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error verifying listing:", error);
+          toast.error("Error creating welcome page");
+          return;
+        }
+        
+        if (data) {
+          toast.success("Listing created! Share the welcome page with your guests.");
+          // Copy welcome page URL to clipboard
+          navigator.clipboard.writeText(welcomePageUrl)
+            .then(() => toast.success("Welcome page URL copied to clipboard!"))
+            .catch(() => console.error("Failed to copy URL"));
+        }
+      });
+
     navigate("/dashboard");
   };
 
