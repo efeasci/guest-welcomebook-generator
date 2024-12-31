@@ -5,19 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import ListingCard from "@/components/listing/ListingCard";
 import DashboardHeader from "@/components/listing/DashboardHeader";
-
-const placeholderImages = [
-  'photo-1649972904349-6e44c42644a7',
-  'photo-1488590528505-98d2b5aba04b',
-  'photo-1518770660439-4636190af475',
-  'photo-1461749280684-dccba630e2f6',
-  'photo-1486312338219-ce68d2c6f44d',
-  'photo-1581091226825-a6a2a5aee158',
-  'photo-1485827404703-89b55fcc595e',
-  'photo-1526374965328-7f61d4dc18c5'
-];
+import LoadingDashboard from "@/components/listing/LoadingDashboard";
+import ListingsGrid from "@/components/listing/ListingsGrid";
 
 export default function Index() {
   const { user } = useAuth();
@@ -81,32 +71,8 @@ export default function Index() {
     fetchData();
   }, [user, navigate, uiToast]);
 
-  const handleDelete = async (listingId: string) => {
-    try {
-      const { error } = await supabase
-        .from("listings")
-        .delete()
-        .eq("id", listingId);
-
-      if (error) throw error;
-
-      setListings(listings.filter(listing => listing.id !== listingId));
-      toast("Listing deleted successfully");
-    } catch (error) {
-      console.error("Error deleting listing:", error);
-      toast.error("Failed to delete listing");
-    }
-  };
-
   if (isLoading) {
-    return (
-      <div className="container mx-auto p-4 mt-16 flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingDashboard />;
   }
 
   return (
@@ -116,16 +82,7 @@ export default function Index() {
         userEmail={user?.email}
         onAddListing={() => navigate('/edit')}
       />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {listings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            onEdit={(listing) => navigate(`/edit/${listing.id}`)}
-          />
-        ))}
-      </div>
+      <ListingsGrid listings={listings} />
     </div>
   );
 }
