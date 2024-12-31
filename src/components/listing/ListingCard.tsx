@@ -11,7 +11,7 @@ interface ListingCardProps {
     address: string;
     image_url?: string;
   };
-  onEdit?: () => void;
+  onEdit: (listing: { id: string }) => void;
   onPreview?: () => void;
 }
 
@@ -36,7 +36,7 @@ const ListingCard = ({ listing, onEdit, onPreview }: ListingCardProps) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={onEdit}
+            onClick={() => onEdit(listing)}
             className="flex-1"
           >
             <Pencil className="h-4 w-4 mr-2" />

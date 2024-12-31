@@ -118,13 +118,11 @@ export default function Index() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {listings.map((listing, index) => (
+        {listings.map((listing) => (
           <ListingCard
             key={listing.id}
             listing={listing}
-            placeholderImage={placeholderImages[index % placeholderImages.length]}
             onEdit={(listing) => navigate(`/edit/${listing.id}`)}
-            onDelete={handleDelete}
           />
         ))}
       </div>
